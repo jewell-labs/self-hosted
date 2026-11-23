@@ -1,34 +1,27 @@
 # Agents
 
-This repository sets up a host. It is not one machine. The Mac Studio profile is one match among others. Do not add a path, username, hostname, model filename, or tunnel token that only exists on one computer.
+This repository sets up a host. It is not one machine. Do not add a path, username, hostname, model filename, or token that only exists on one computer.
 
-## Start here
+`just --list` is the command list. `prompts/setup-host.md` is the only setup prompt. Call MCP `discover` when the mesh is up; otherwise `just discover`.
 
-1. Call the MCP tool `discover`, or run `node bin/discover.mjs`.
-2. Follow `prompts/setup-host.md` and the commands in that result. Do not invent flags, ports, or plugins.
-3. Select a plugin only when `applicable` is true. A proof selects the plugins that are both `applicable` and `proofRequired`.
-4. Do the plugin's work by calling `<id>.setup` and `<id>.check`. A plugin is done when every `validate` command exits 0. Those commands are `nix run .#setup-<id>` and `nix run .#check-<id>`.
+A proof, or a named plugin list, skips questions. A person who has not chosen is asked which applicable plugins this host should run. Use that discover result's `llmProfile` and decision `slots`. Select a plugin only when `applicable` is true. A proof selects plugins that are both `applicable` and `proofRequired`. Finish a plugin with `<id>.setup` and `<id>.check`, or `just setup <id>` and `just check <id>`.
 
-Infra skills, MCP, and language servers are in `.agents/`. That directory is the agent setup for every repo that uses this host. Each plugin adds `plugins/<id>/.agents` or `<id>/.agents`. The skill in `.agents/skills/<id>` is the one to follow. `node mcp/server.mjs` serves that mesh on `127.0.0.1:8473`. It refuses any other bind unless `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set. With those set, `/mcp` requires a Cloudflare Access JWT (`Cf-Access-Jwt-Assertion`, RS256, issuer `https://<team>`, audience `CF_ACCESS_AUD`). A destructive tool requires that JWT even on loopback. Other repos listed in `github-repos/config` are added to the mesh and their tools are not executed. Agents share one Access service token. The seat limits are in `.agents/mesh.json`.
+`.agents/` is the mesh every repo on this host uses. Call `doctor` before changing it. The default level is `strict`. A plugin's tools are `plugins/<id>/.agents`. The skill in `.agents/skills/<id>` is the one to follow. Other repos in `github-repos/config` are listed and their tools are not executed. `just explore` shows those checkouts.
+
+The `cloudflare` plugin owns Access, the shared service token, and the log. One team domain and one audience cover MCP and the log. `policy.json` must match `.agents/mesh.json`.
+
+`events/event.json` is the one event schema. A plugin webhook is that plugin's `event.json`: tool calls and the `ci` workflow. Agents watch `GET /events` and filter by `plugin`, `type`, and `name`. The stream stays in the MCP process, including a sandbox with no Cloudflare. The log page at `/log` calls `events.webhooks` and opens the stream that tool returns. EventSource sends cookie `CF_Authorization`. A query string is not a token.
 
 ## Do not
 
-- Commit a token, key, registration token, or Access private key. `~/.cloudflared/token` is mode `0600` and stays outside git. The `sshd` plugin's CA, host key, and principals stay in `~/.ssh/userland`.
-- Install `actions-runner` on a public repository. Pull requests would run on the host. The setup command exits 1 unless `ALLOW_PUBLIC_REPO_RUNNER=1`.
-- Start a second llama.cpp process when the discover result says `secondProcess` is false (hosts under 64GB).
-- Treat `bin/install-darwin-llama.mjs` as the Linux or Jetson install. Linux uses the profile `discover` already rendered.
-- Put a repo name or a sync interval anywhere except `github-repos/config`. `github-repos/ghref` reads that file.
-- Add a plugin as a shell or Node install when the same plugin has no `nix/plugins` package. Versions for agent-desktop, agent-browser, and the Actions runner live in `catalog/pins.json`.
+- Commit a token, key, registration token, or Access private key. Weights and the agent-desktop sandbox stay in `~/.self-hosted`. `just nuke` removes the rest and checks that the LaunchAgents are gone.
+- Install `actions-runner` on a public repository. The setup exits 1 unless `ALLOW_PUBLIC_REPO_RUNNER=1`.
+- Copy a GGUF into a second directory. `llm` and `decision` both read `~/.self-hosted/models/gguf`. The decision router stays its own process.
+- Write a self-hosted file outside `~/.self-hosted`. `home/policy.json` is the allowed list, the disk reserve, and the probe text.
+- Treat the macOS llm LaunchAgent as the Linux install. Linux uses the profile discover rendered.
+- Put a repo name or a sync interval anywhere except `github-repos/config`.
+- Add a plugin outside Nix. CLI versions are `catalog/pins.json`.
 
 ## Checks
 
-```sh
-node --test test/*.test.mjs
-nix flake check
-```
-
-`proof/prove.mjs` runs the same prompt inside an Apple container against a local llama.cpp server. `LLAMA_URL` and `LLAMA_MODEL` select that server. The container must not contain this machine's weights or tokens.
-
-## What this repo does not run
-
-Flag Seeker has its own repository and its own `AGENTS.md`. This repo does not deploy it. Do not start the `mcp` plugin on a machine that has not asked for it.
+`just test` and `just flake`. `just prove` needs `LLM_MODEL` or `LLAMA_MODEL`. Do not start the MCP server on a machine that has not asked for it.

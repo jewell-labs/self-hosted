@@ -1,0 +1,19 @@
+{
+  "name": "selfhost-cloudflare-logs",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      { "name": "LOGS", "class_name": "LogStream" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["LogStream"] }
+  ],
+  "assets": {
+    "directory": "log-ui",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  }
+}

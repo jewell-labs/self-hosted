@@ -1,0 +1,30 @@
+{
+  "schema": "jewell-labs.self-hosted.home.v1",
+  "allowed": [
+    "agent-desktop",
+    "bin",
+    "cloudflare",
+    "cloudflared",
+    "decision",
+    "ghref",
+    "github",
+    "launchd",
+    "llm",
+    "logs",
+    "models",
+    "portless",
+    "sshd",
+    "state"
+  ],
+  "heavy": ["models", "agent-desktop"],
+  "refuseNames": ["node_modules", ".pnpm-store"],
+  "weights": "models/gguf",
+  "usageLog": "logs/models.jsonl",
+  "usageKeep": 400,
+  "diskReserveBytes": 21474836480,
+  "maxDownloadBytes": 42949672960,
+  "probes": [
+    { "id": "pong", "text": "Reply with the single word pong.", "expect": "pong" },
+    { "id": "sum", "text": "What is 2+2? Reply with one digit.", "expect": "4" }
+  ]
+}

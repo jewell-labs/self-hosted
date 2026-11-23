@@ -3,9 +3,9 @@ let
   ids = [
     "baseline"
     "mcp"
-    "llama"
+    "llm"
     "decision"
-    "cloudflared"
+    "cloudflare"
     "sshd"
     "github-repos"
     "agent-desktop"
@@ -29,7 +29,7 @@ runCommand "selfhost-plugins-check"
     ${packages.actions-runner}/bin/check
     agent-desktop version | grep -q '1.3.1'
     agent-browser --version | grep -q '0.43.0'
-    test -x ${packages.llama}/bin/llama-server
+    test -x ${packages.llm}/bin/llama-server
     test -d ${packages.actions-runner}/libexec/actions-runner
     grep -q 'PasswordAuthentication no' ${packages.sshd}/share/selfhost/sshd_config.template
     grep -q 'ListenAddress 127.0.0.1' ${packages.sshd}/share/selfhost/sshd_config.template

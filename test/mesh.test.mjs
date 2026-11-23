@@ -60,13 +60,13 @@ test("mesh lists plugin tools, keeps external commands unexecuted, and hides sec
   const store = await mkdtemp(join(tmpdir(), "mesh-repos-"));
   const state = await mkdtemp(join(tmpdir(), "mesh-state-"));
   const sentinel = join(store, "touched");
-  const checkout = join(store, "Flag-Seeker", "flagseeker");
+  const checkout = join(store, "example", "app");
   await mkdir(join(checkout, ".agents"), { recursive: true });
   await mkdir(join(checkout, "plugins", "evil", ".agents"), { recursive: true });
   await writeFile(join(checkout, ".agents", "mcp.json"), `${JSON.stringify({
     schema: "jewell-labs.agents.mcp.v1",
     tools: [{
-      name: "flagseeker.pwn",
+      name: "example.pwn",
       description: "should not run",
       destructive: true,
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
@@ -81,13 +81,13 @@ test("mesh lists plugin tools, keeps external commands unexecuted, and hides sec
     schema: "jewell-labs.agents.mcp.v1",
     tools: [{ name: "evil.run", description: "hidden", destructive: true, run: { type: "shell" } }],
   }, null, 2).replace("hidden", "hidden cfast_abc")}\n`);
-  const env = baseEnv({ GHREF_REF: store, SELFHOST_STATE: state });
+  const env = baseEnv({ GHREF_REF: store, SELFHOST_STATE: state, SELFHOST_REPOS: "example/app" });
   try {
     const mesh = await loadMesh(env);
     const declared = mesh.tools.find((tool) => tool.name === "portless");
     assert.equal(declared.callable, false);
     assert.equal(declared.run.type, "unknown");
-    const external = mesh.tools.find((tool) => tool.name === "flagseeker.pwn");
+    const external = mesh.tools.find((tool) => tool.name === "example.pwn");
     assert.equal(external.callable, false);
     assert.equal(external.run.type, "shell");
     assert.equal(mesh.tools.some((tool) => tool.name === "evil.run"), false);
@@ -109,7 +109,7 @@ test("mesh lists plugin tools, keeps external commands unexecuted, and hides sec
     assert.match(skill.content[0].text, /mesh\.list/);
     assert.doesNotMatch(skill.content[0].text, /\b50\b/);
     await assert.rejects(() => callTool("mesh.skill", { name: "../mcp" }, env, { mesh }), /skill name/);
-    const ran = await callTool("flagseeker.pwn", {}, env, { mesh });
+    const ran = await callTool("example.pwn", {}, env, { mesh });
     assert.equal(ran.isError, true);
     assert.match(ran.content[0].text, /not executed/);
     assert.equal(existsSync(sentinel), false);
@@ -120,9 +120,10 @@ test("mesh lists plugin tools, keeps external commands unexecuted, and hides sec
 });
 
 test("loopback serves a read-only setup and refuses a destructive setup without a jwt", async () => {
-  const state = await mkdtemp(join(tmpdir(), "mesh-http-"));
+  const home = await mkdtemp(join(tmpdir(), "mesh-http-"));
+  const state = join(home, ".self-hosted", "state");
   const store = await mkdtemp(join(tmpdir(), "mesh-empty-"));
-  const env = baseEnv({ SELFHOST_STATE: state, GHREF_REF: store });
+  const env = baseEnv({ HOME: home, SELFHOST_STATE: state, GHREF_REF: store });
   try {
     await withServer(env, async (port) => {
       const listed = await post(port, { jsonrpc: "2.0", id: 1, method: "tools/list" });
@@ -131,17 +132,17 @@ test("loopback serves a read-only setup and refuses a destructive setup without 
       assert.equal(tools.some((tool) => tool.name === "discover"), true);
       const destructive = tools.find((tool) => tool.name === "actions-runner.setup");
       assert.equal(destructive.annotations.destructiveHint, true);
-      const setup = await post(port, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "llama.setup", arguments: {} } });
+      const setup = await post(port, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "llm.setup", arguments: {} } });
       assert.equal(setup.status, 200);
       const setupBody = JSON.parse(setup.text);
       assert.equal(setupBody.result.isError, false);
-      assert.match(setupBody.result.content[0].text, /llama\.json/);
+      assert.match(setupBody.result.content[0].text, /llm\.json/);
       const denied = await post(port, { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "actions-runner.setup", arguments: {} } });
       assert.equal(denied.status, 401);
       assert.match(denied.text, /cloudflare access jwt required/);
     });
   } finally {
-    await rm(state, { recursive: true, force: true });
+    await rm(home, { recursive: true, force: true });
     await rm(store, { recursive: true, force: true });
   }
 });

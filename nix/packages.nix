@@ -8,9 +8,9 @@ let
   names = [
     "baseline"
     "mcp"
-    "llama"
+    "llm"
     "decision"
-    "cloudflared"
+    "cloudflare"
     "sshd"
     "github-repos"
     "agent-desktop"
@@ -27,12 +27,12 @@ let
       proofRequired = true;
     };
     mcp = pkgs.callPackage ./plugins/mcp.nix { inherit plugin; repo = self; };
-    llama = pkgs.callPackage ./plugins/llama.nix { inherit plugin; };
+    llm = pkgs.callPackage ./plugins/llm.nix { inherit plugin; };
     decision = plugin {
       id = "decision";
-      summary = "Decision-modality models on the llama.cpp router. A second process only when the host has 64GB or more.";
+      summary = "Decision models and compound models, separate from the llm server. The registry is unbounded. Resident slots come from host memory.";
     };
-    cloudflared = pkgs.callPackage ./plugins/cloudflared.nix { inherit plugin; };
+    cloudflare = pkgs.callPackage ./plugins/cloudflare.nix { inherit plugin; };
     sshd = pkgs.callPackage ./plugins/sshd.nix { inherit plugin self; };
     github-repos = pkgs.callPackage ./plugins/github-repos.nix { inherit plugin self; };
     agent-desktop = pkgs.callPackage ./plugins/agent-desktop.nix { inherit plugin pins; };

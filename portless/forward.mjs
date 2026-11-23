@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { writeSyncInside } from "../lib/jail.mjs";
+import { homeDir } from "../lib/paths.mjs";
 import { createServer, connect as netConnect } from "node:net";
 import { networkInterfaces } from "node:os";
 import { join } from "node:path";
@@ -85,9 +87,7 @@ function serve() {
   server.on("error", (error) => process.exit(error.code === "EADDRINUSE" ? 0 : 1));
   server.listen(guestPort, address, () => {
     try {
-      const dir = stateDir();
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, "guest-forward.pid"), String(process.pid));
+      writeSyncInside(homeDir(), join(stateDir(), "guest-forward.pid"), String(process.pid));
     } catch {
       // The listener is up. The pid file is only a marker.
     }

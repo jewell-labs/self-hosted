@@ -24,11 +24,7 @@ let
   inputs = [ bash coreutils nodejs ] ++ runtimeInputs;
   preamble = ''
     repo=${repo}
-    if [[ -f $PWD/catalog/plugins.json ]]; then
-      export SELFHOST_STATE="''${SELFHOST_STATE:-$PWD/.self-hosted}"
-    else
-      export SELFHOST_STATE="''${SELFHOST_STATE:-''${XDG_STATE_HOME:-$HOME/.local/state}/self-hosted}"
-    fi
+    export SELFHOST_STATE="''${SELFHOST_STATE:-$HOME/.self-hosted/state}"
     export SELFHOST_ROOT=$repo
     mkdir -p "$SELFHOST_STATE"
   '';

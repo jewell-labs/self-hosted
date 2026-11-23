@@ -27,6 +27,19 @@
       "run": { "type": "mesh-lsp" }
     },
     {
+      "name": "doctor",
+      "description": "Check the catalog, mesh, repos, Cloudflare files, and GitHub workflows. Omit level for strict.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "level": { "type": "string", "enum": ["shape", "mesh", "repos", "strict"] }
+        },
+        "additionalProperties": false
+      },
+      "run": { "type": "doctor" }
+    },
+    {
       "name": "mesh.skill",
       "description": "Return one skill by name. The name is a skill id, not a path.",
       "destructive": false,
@@ -37,6 +50,29 @@
         "additionalProperties": false
       },
       "run": { "type": "mesh-skill" }
+    },
+    {
+      "name": "events.webhooks",
+      "description": "Return the one event schema and each plugin webhook. Watch GET /events and filter with plugin, type, and name.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "events-webhooks" }
+    },
+    {
+      "name": "events.workflow",
+      "description": "Record a ci workflow event for one plugin. detail is started, ok, or error. The event stores no other text.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plugin": { "type": "string" },
+          "name": { "type": "string", "enum": ["ci"] },
+          "detail": { "type": "string", "enum": ["started", "ok", "error"] }
+        },
+        "required": ["plugin", "name", "detail"],
+        "additionalProperties": false
+      },
+      "run": { "type": "events-workflow" }
     }
   ]
 }

@@ -1,0 +1,70 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "cloudflare.setup",
+      "description": "Write the Cloudflare tunnel, Access, and agent auth unit. Does not print tokens.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.check",
+      "description": "Check the Cloudflare unit, Access gate, and service-token file modes.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.access",
+      "description": "Report whether Cloudflare Access is configured. Does not return a token or a JWT.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "cloudflare-access", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.auth",
+      "description": "Report the shared Access service-token paths, header names, and seat limits.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "cloudflare-auth", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.logs",
+      "description": "Read recent events from the host log Durable Object. Does not return tokens or arguments.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "cloudflare-logs", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.admin",
+      "description": "Report the login-keychain Cloudflare API token state. Does not return the token.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "cloudflare-admin", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.apply",
+      "description": "Call the Cloudflare API with the login-keychain token. The token is not an argument and is not returned.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "method": { "type": "string" },
+          "path": { "type": "string" },
+          "body": { "type": "string" }
+        },
+        "required": ["method", "path"],
+        "additionalProperties": false
+      },
+      "run": { "type": "cloudflare-apply", "plugin": "cloudflare" }
+    },
+    {
+      "name": "cloudflare.token",
+      "description": "Ask the user to store the Cloudflare API token in the login keychain. The token is not an argument.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "cloudflare-token", "plugin": "cloudflare" }
+    }
+  ]
+}

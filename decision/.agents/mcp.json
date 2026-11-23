@@ -1,0 +1,104 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "decision.setup",
+      "description": "Record the decision registry, resident slots, and router argv. Does not start a server.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "decision" }
+    },
+    {
+      "name": "decision.check",
+      "description": "Check the recorded decision registry against the catalog and this host.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "decision" }
+    },
+    {
+      "name": "decision.models",
+      "description": "List decision models and compound models. Does not read weight files.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "decision-models", "plugin": "decision" }
+    },
+    {
+      "name": "decision.call",
+      "description": "Run one decision model or a compound model through the decision router. The llm server is not used.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": { "type": "string" },
+          "text": { "type": "string" }
+        },
+        "required": ["model", "text"],
+        "additionalProperties": false
+      },
+      "run": { "type": "decision-call", "plugin": "decision" }
+    },
+    {
+      "name": "decision.config",
+      "description": "Show one decision model's catalog entry and, for a weight, its GGUF header.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "run": { "type": "decision-config", "plugin": "decision" }
+    },
+    {
+      "name": "decision.usage",
+      "description": "Read recent decision probe and call rows from the home usage log. Rows have no prompt text.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "decision-usage", "plugin": "decision" }
+    },
+    {
+      "name": "decision.download",
+      "description": "Download one GGUF from a Hugging Face repo into the shared library and add it to the host decision catalog. Refuses paths outside the home and files that would pass the disk reserve.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string" },
+          "file": { "type": "string" },
+          "id": { "type": "string" },
+          "revision": { "type": "string" }
+        },
+        "required": ["repo", "file", "id"],
+        "additionalProperties": false
+      },
+      "run": { "type": "decision-download", "plugin": "decision" }
+    },
+    {
+      "name": "decision.remove",
+      "description": "Remove one host-catalog decision model and its weight when no compound still names it. Does not edit the repo catalog.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"],
+        "additionalProperties": false
+      },
+      "run": { "type": "decision-remove", "plugin": "decision" }
+    },
+    {
+      "name": "decision.sample",
+      "description": "Run the two short probes from home/policy.json on one decision model and at most two others. Does not start the router.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "seed": { "type": "string" }
+        },
+        "required": ["id", "seed"],
+        "additionalProperties": false
+      },
+      "run": { "type": "decision-sample", "plugin": "decision" }
+    }
+  ]
+}

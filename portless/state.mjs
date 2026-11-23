@@ -1,5 +1,7 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { writeInside } from "../lib/jail.mjs";
+import { homeDir } from "../lib/paths.mjs";
 import { bridgeAddress } from "./forward.mjs";
 import { caPath, loadPolicy, stateDir } from "./host.mjs";
 
@@ -14,7 +16,7 @@ export async function writePortlessState(dir, home) {
     bridge: bridgeAddress(),
     appPortRange: policy.appPortRange,
   };
-  await writeFile(join(dir, "portless.json"), `${JSON.stringify(unit, null, 2)}\n`);
+  await writeInside(homeDir(), join(dir, "portless.json"), `${JSON.stringify(unit, null, 2)}\n`);
   return unit;
 }
 

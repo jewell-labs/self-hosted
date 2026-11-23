@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Read-only main worktrees under ~/github, backed by bare mirrors.
+# Read-only main worktrees under ~/.self-hosted/github, backed by bare mirrors.
 # The repo list and the sync interval come from ./config next to this file.
 #
-#   github-repos/ghref                       sync, then re-lock ~/github read-only
+#   github-repos/ghref                       sync, then re-lock the reference tree read-only
 #   github-repos/ghref new <org/repo> <branch> [dir]
 #   github-repos/ghref install | uninstall   schedule sync from config
 set -u
@@ -24,13 +24,13 @@ done < "$CONFIG"
 [ -n "$interval" ] || { echo "ghref: config has no interval_seconds" >&2; exit 1; }
 [ "${#repos[@]}" -gt 0 ] || { echo "ghref: config has no repos" >&2; exit 1; }
 
-REF=${GHREF_REF:-$HOME/github}
-STORE=${GHREF_STORE:-$HOME/.local/share/ghref}
+REF=${GHREF_REF:-$HOME/.self-hosted/github}
+STORE=${GHREF_STORE:-$HOME/.self-hosted/ghref}
 BASE=${GHREF_BASE:-https://github.com/}
 LABEL=local.ghref
 PLIST=$HOME/Library/LaunchAgents/$LABEL.plist
-LOG=$HOME/Library/Logs/ghref.log
-BIN=${GHREF_BIN:-$HOME/.local/bin/ghref}
+LOG=$HOME/.self-hosted/logs/ghref.log
+BIN=${GHREF_BIN:-$HOME/.self-hosted/bin/ghref}
 
 warn(){ echo "WARN $*"; }
 die(){ echo "ghref: $*" >&2; exit 1; }

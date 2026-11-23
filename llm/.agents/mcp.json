@@ -1,0 +1,88 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "llm.setup",
+      "description": "Write the llama.cpp profile for this host's llm server. Does not start it and does not load decision models.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "llm" }
+    },
+    {
+      "name": "llm.check",
+      "description": "Check the llm unit against the profile discover selected.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "llm" }
+    },
+    {
+      "name": "llm.models",
+      "description": "List llm weights in the shared library, free space, and the disk reserve from home/policy.json.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "llm-models", "plugin": "llm" }
+    },
+    {
+      "name": "llm.config",
+      "description": "Read the GGUF header for one llm weight. Does not load the model.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "file": { "type": "string" } },
+        "required": ["file"],
+        "additionalProperties": false
+      },
+      "run": { "type": "llm-config", "plugin": "llm" }
+    },
+    {
+      "name": "llm.usage",
+      "description": "Read recent llm probe and call rows from the home usage log. Rows have no prompt text.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "llm-usage", "plugin": "llm" }
+    },
+    {
+      "name": "llm.download",
+      "description": "Download one GGUF from a Hugging Face repo into the shared library. Refuses a file that exists, a path outside the home, or a file that would pass the disk reserve.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repo": { "type": "string" },
+          "file": { "type": "string" },
+          "revision": { "type": "string" }
+        },
+        "required": ["repo", "file"],
+        "additionalProperties": false
+      },
+      "run": { "type": "llm-download", "plugin": "llm" }
+    },
+    {
+      "name": "llm.remove",
+      "description": "Delete one llm weight from the shared library. Refuses a file that a decision model still names.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "file": { "type": "string" } },
+        "required": ["file"],
+        "additionalProperties": false
+      },
+      "run": { "type": "llm-remove", "plugin": "llm" }
+    },
+    {
+      "name": "llm.sample",
+      "description": "Run the two short probes from home/policy.json on one llm weight and at most two other llm weights. Does not start the server.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string" },
+          "seed": { "type": "string" }
+        },
+        "required": ["file", "seed"],
+        "additionalProperties": false
+      },
+      "run": { "type": "llm-sample", "plugin": "llm" }
+    }
+  ]
+}

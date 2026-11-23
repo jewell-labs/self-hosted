@@ -9,8 +9,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const llamaUrl = process.env.LLAMA_URL ?? "http://127.0.0.1:8080";
-const model = process.env.LLAMA_MODEL ?? "clairic-flash-Q4_K_M";
+const llamaUrl = process.env.LLM_URL ?? process.env.LLAMA_URL ?? "http://127.0.0.1:8080";
+const model = process.env.LLM_MODEL ?? process.env.LLAMA_MODEL ?? "";
+if (!model) {
+  console.error("set LLM_MODEL or LLAMA_MODEL to the model id served by the llm server");
+  process.exit(1);
+}
 const containerBin = process.env.CONTAINER_BIN ?? "container";
 const image = process.env.PROOF_IMAGE ?? "docker.io/library/node:22-bookworm";
 const name = "selfhost-proof";

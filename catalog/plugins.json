@@ -18,28 +18,28 @@
       "validate": ["nix run .#check-mcp"]
     },
     {
-      "id": "llama",
-      "summary": "llama.cpp server tuned for single-stream throughput. One resident model.",
+      "id": "llm",
+      "summary": "One llama.cpp server for this host. One resident model. Weights are the shared ~/.self-hosted/models/gguf library.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["nix run .#setup-llama"],
-      "validate": ["nix run .#check-llama"]
+      "setup": ["nix run .#setup-llm"],
+      "validate": ["nix run .#check-llm"]
     },
     {
       "id": "decision",
-      "summary": "Decision-modality models on the llama.cpp router. A second process only when the host has 64GB or more.",
+      "summary": "Decision models and compound models, separate from the llm server. The registry is unbounded. Resident slots come from host memory.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
       "setup": ["nix run .#setup-decision"],
       "validate": ["nix run .#check-decision"]
     },
     {
-      "id": "cloudflared",
-      "summary": "Cloudflare Tunnel unit that reads the token from a mode 0600 file, never from git.",
+      "id": "cloudflare",
+      "summary": "Cloudflare Tunnel, Access, the one shared agent service token, and the host log stream. Tokens stay outside git.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["nix run .#setup-cloudflared"],
-      "validate": ["nix run .#check-cloudflared"]
+      "setup": ["nix run .#setup-cloudflare"],
+      "validate": ["nix run .#check-cloudflare"]
     },
     {
       "id": "sshd",

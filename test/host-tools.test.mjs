@@ -20,7 +20,7 @@ function env(extra = {}) {
 
 test("portless names checkouts without sharing a bare host", () => {
   assert.equal(dnsLabel("Hello World"), "hello-world");
-  assert.equal(prefixFor({ linked: true, branch: "task/112-slug", directory: "flagseeker", path: "/anywhere" }), "task-112-slug");
+  assert.equal(prefixFor({ linked: true, branch: "task/112-slug", directory: "checkout", path: "/anywhere" }), "task-112-slug");
   const left = prefixFor({ linked: false, branch: "main", directory: "app", path: "/a/app" });
   const right = prefixFor({ linked: false, branch: "main", directory: "app", path: "/b/app" });
   assert.notEqual(left, right);

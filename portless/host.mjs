@@ -5,6 +5,7 @@ import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { layout } from "../lib/paths.mjs";
 
 const execFileAsync = promisify(execFile);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -13,8 +14,10 @@ export function loadPolicy() {
   return JSON.parse(readFileSync(join(here, "policy.json"), "utf8"));
 }
 
-export function stateDir(home = homedir()) {
-  return join(home, loadPolicy().stateDir);
+export function stateDir(home = process.env.HOME ?? homedir()) {
+  const env = { ...process.env, HOME: home };
+  if (home !== (process.env.HOME ?? homedir())) delete env.SELFHOST_HOME;
+  return layout(env).portless;
 }
 
 export function caPath(home = homedir()) {

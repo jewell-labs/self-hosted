@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jewell-labs.self-hosted.event.v1",
+  "title": "Event",
+  "description": "One event for every plugin webhook. type tool is a mesh tool finishing. type workflow is the ci lifecycle. detail has no free text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "at", "plugin", "type", "name", "detail"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[1-9][0-9]{0,17}$" },
+    "at": { "type": "string", "minLength": 20, "maxLength": 32 },
+    "plugin": { "type": "string", "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$" },
+    "type": { "type": "string", "enum": ["tool", "workflow"] },
+    "name": { "type": "string", "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$" },
+    "detail": { "type": "string", "enum": ["started", "ok", "error"] }
+  }
+}

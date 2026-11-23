@@ -13,9 +13,9 @@ jobs:
       - run: node --test test/*.test.mjs
       - run: node bin/setup.mjs baseline && node bin/check.mjs baseline
       - run: node bin/setup.mjs mcp && node bin/check.mjs mcp
-      - run: node bin/setup.mjs llama && node bin/check.mjs llama
+      - run: node bin/setup.mjs llm && node bin/check.mjs llm
       - run: node bin/setup.mjs decision && node bin/check.mjs decision
-      - run: node bin/setup.mjs cloudflared && node bin/check.mjs cloudflared
+      - run: node bin/setup.mjs cloudflare && node bin/check.mjs cloudflare
       - run: node bin/setup.mjs sshd && node bin/check.mjs sshd
       - run: node bin/setup.mjs github-repos && node bin/check.mjs github-repos
       - run: node bin/setup.mjs agent-desktop && node bin/check.mjs agent-desktop

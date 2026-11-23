@@ -1,0 +1,13 @@
+{
+  "schema": "jewell-labs.self-hosted.event.v1",
+  "plugin": "simulators",
+  "events": [
+    {
+      "type": "tool"
+    },
+    {
+      "type": "workflow",
+      "name": "ci"
+    }
+  ]
+}

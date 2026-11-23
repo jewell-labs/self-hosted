@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { buildDiscovery, repoRoot } from "../lib/discover.mjs";
-import { selectLlamaProfile } from "../lib/profiles.mjs";
+import { decisionUnit } from "../decision/registry.mjs";
+import { JailError, writeInside } from "../lib/jail.mjs";
+import { selectLlmProfile } from "../lib/profiles.mjs";
 import { readHost } from "../lib/host.mjs";
+import { homeDir, layout } from "../lib/paths.mjs";
 
 const id = process.argv[2];
 if (!id) {
@@ -12,7 +14,17 @@ if (!id) {
 }
 
 const root = repoRoot();
-const stateDir = process.env.SELFHOST_STATE ?? join(root, ".self-hosted");
+const home = homeDir();
+const stateDir = process.env.SELFHOST_STATE ?? layout().state;
+
+async function writeState(name, body) {
+  try {
+    return await writeInside(home, join(stateDir, name), body);
+  } catch (error) {
+    console.error(error instanceof JailError ? error.message : error.message);
+    process.exit(1);
+  }
+}
 const discovery = buildDiscovery();
 const plugin = discovery.plugins.find((item) => item.id === id);
 if (!plugin) {
@@ -24,12 +36,11 @@ if (!plugin.applicable) {
   process.exit(1);
 }
 
-await mkdir(stateDir, { recursive: true });
 const host = readHost();
 
 if (id === "baseline") {
-  await writeFile(join(stateDir, "host.json"), `${JSON.stringify({ schema: discovery.schema, host }, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "host.json")}`);
+  const dest = await writeState("host.json", `${JSON.stringify({ schema: discovery.schema, host }, null, 2)}\n`);
+  console.log(`wrote ${dest}`);
 } else if (id === "mcp") {
   const unit = {
     bind: "127.0.0.1",
@@ -37,42 +48,29 @@ if (id === "baseline") {
     command: ["node", "mcp/server.mjs"],
     access: plugin.access,
   };
-  await writeFile(join(stateDir, "mcp.json"), `${JSON.stringify(unit, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "mcp.json")}`);
-} else if (id === "llama") {
-  const profile = selectLlamaProfile(host);
+  const dest = await writeState("mcp.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest}`);
+} else if (id === "llm") {
+  const profile = selectLlmProfile(host);
   const rendered = {
     profile: profile.id,
     port: profile.port,
     args: profile.args,
-    modelsDir: host.modelsDir,
-    note: "Pass --models-dir $SELFHOST_MODELS_DIR at install time. Weights stay outside git.",
+    modelsDir: host.llmModels,
   };
-  await writeFile(join(stateDir, "llama.json"), `${JSON.stringify(rendered, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "llama.json")} profile=${profile.id}`);
+  const dest = await writeState("llm.json", `${JSON.stringify(rendered, null, 2)}\n`);
+  console.log(`wrote ${dest} profile=${profile.id}`);
 } else if (id === "decision") {
-  const rendered = {
-    secondProcess: host.memGb >= 64,
-    port: host.memGb >= 64 ? 8090 : 8080,
-    ctxSize: 4096,
-    note: host.memGb >= 64
-      ? "Start a second llama-server for decision models."
-      : "Keep a single router. Load a model whose output modality includes decisions.",
-  };
-  await writeFile(join(stateDir, "decision.json"), `${JSON.stringify(rendered, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "decision.json")} secondProcess=${rendered.secondProcess}`);
-} else if (id === "cloudflared") {
-  const tokenPath = join(process.env.HOME ?? "/tmp", ".cloudflared", "token");
-  const unit = {
-    tokenPath,
-    command: ["plugins/cloudflared/run-tunnel.sh"],
-    note: "Put the tunnel token in tokenPath mode 0600. Do not commit it.",
-  };
-  await writeFile(join(stateDir, "cloudflared.json"), `${JSON.stringify(unit, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "cloudflared.json")}`);
+  const rendered = decisionUnit();
+  const dest = await writeState("decision.json", `${JSON.stringify(rendered, null, 2)}\n`);
+  console.log(`wrote ${dest} slots=${rendered.slots} models=${rendered.models.length}`);
+} else if (id === "cloudflare") {
+  const { cloudflareUnit } = await import("../plugins/cloudflare/unit.mjs");
+  const unit = cloudflareUnit();
+  const dest = await writeState("cloudflare.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest} access=${unit.access.required}`);
 } else if (id === "sshd") {
-  const home = process.env.HOME ?? "/tmp";
-  const dir = join(home, ".ssh", "userland");
+  const dir = layout().sshd;
   const unit = {
     listen: "127.0.0.1",
     port: 2222,
@@ -84,8 +82,8 @@ if (id === "baseline") {
     trustedUserCAKeys: join(dir, "cf-access-ca.pub"),
     note: "The CA, host key, and principals stay in this directory. Do not commit them.",
   };
-  await writeFile(join(stateDir, "sshd.json"), `${JSON.stringify(unit, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "sshd.json")}`);
+  const dest = await writeState("sshd.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest}`);
 } else if (id === "github-repos") {
   const { execFileSync } = await import("node:child_process");
   const printed = execFileSync("bash", ["github-repos/ghref", "print-config"], { cwd: root, encoding: "utf8" });
@@ -100,8 +98,8 @@ if (id === "baseline") {
     repos: lines.slice(1),
     config: "github-repos/config",
   };
-  await writeFile(join(stateDir, "github-repos.json"), `${JSON.stringify(unit, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "github-repos.json")} every ${unit.intervalSeconds}s`);
+  const dest = await writeState("github-repos.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest} every ${unit.intervalSeconds}s`);
 } else if (id === "agent-desktop") {
   const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
   const unit = {
@@ -114,8 +112,8 @@ if (id === "baseline") {
       note: "The first macOS sandbox needs a person to finish Setup Assistant, run guest-setup.sh from the shared folder, and grant Accessibility. The guest network is not isolated.",
     },
   };
-  await writeFile(join(stateDir, "agent-desktop.json"), `${JSON.stringify(unit, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "agent-desktop.json")} version=${unit.version}`);
+  const dest = await writeState("agent-desktop.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest} version=${unit.version}`);
 } else if (id === "agent-browser") {
   const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
   const unit = {
@@ -123,8 +121,8 @@ if (id === "baseline") {
     installBrowsers: "agent-browser install",
     note: "Chrome for Testing is downloaded into the user directory. It is not stored in git.",
   };
-  await writeFile(join(stateDir, "agent-browser.json"), `${JSON.stringify(unit, null, 2)}\n`);
-  console.log(`wrote ${join(stateDir, "agent-browser.json")} version=${unit.version}`);
+  const dest = await writeState("agent-browser.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest} version=${unit.version}`);
 } else if (id === "simulators") {
   const { writeSimulatorState } = await import("../simulators/state.mjs");
   const unit = await writeSimulatorState(stateDir, process.env);
@@ -144,7 +142,7 @@ if (id === "baseline") {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");
     process.exit(1);
   }
-  await writeFile(join(stateDir, "actions-runner.json"), `${JSON.stringify({ allowed: true, host: host.hostname }, null, 2)}\n`);
+  await writeState("actions-runner.json", `${JSON.stringify({ allowed: true, host: host.hostname }, null, 2)}\n`);
   console.log("actions-runner override recorded");
 } else {
   console.error(`no setup for ${id}`);

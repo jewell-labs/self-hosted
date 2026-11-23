@@ -1,10 +1,9 @@
 import { spawn } from "node:child_process";
-import { generateKeyPairSync, sign } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { lstat, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { buildDiscovery, repoRoot } from "../lib/discover.mjs";
 import { readHost } from "../lib/host.mjs";
+import { layout } from "../lib/paths.mjs";
 
 const id = process.argv[2];
 if (!id) {
@@ -13,17 +12,12 @@ if (!id) {
 }
 
 const root = repoRoot();
-const stateDir = process.env.SELFHOST_STATE ?? join(root, ".self-hosted");
+const stateDir = process.env.SELFHOST_STATE ?? layout().state;
 const discovery = buildDiscovery();
 const plugin = discovery.plugins.find((item) => item.id === id);
 if (!plugin?.applicable) {
   console.error(`${id} is not applicable`);
   process.exit(1);
-}
-
-function b64url(value) {
-  const buf = Buffer.isBuffer(value) ? value : Buffer.from(value);
-  return buf.toString("base64url");
 }
 
 async function post(port, body, headers = {}) {
@@ -81,91 +75,66 @@ if (id === "baseline") {
     console.error("mcp unit is not loopback or access-gated");
     process.exit(1);
   }
-  const dir = await mkdtemp(join(tmpdir(), "selfhost-access-"));
+  const open = await startServer({ PORT: "0", BIND_HOST: "127.0.0.1" });
   try {
-    const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-    const jwk = publicKey.export({ format: "jwk" });
-    jwk.kid = "proof";
-    jwk.alg = "RS256";
-    jwk.use = "sig";
-    const jwksPath = join(dir, "jwks.json");
-    await writeFile(jwksPath, JSON.stringify({ keys: [jwk] }));
-    const open = await startServer({ PORT: "0", BIND_HOST: "127.0.0.1" });
-    try {
-      const listed = await post(open.info.port, { jsonrpc: "2.0", id: 1, method: "tools/list" });
-      if (listed.status !== 200 || !listed.text.includes("discover")) throw new Error(`tools/list failed ${listed.status}`);
-      const called = await post(open.info.port, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "discover", arguments: {} } });
-      const parsed = JSON.parse(called.text);
-      const payload = JSON.parse(parsed.result.content[0].text);
-      if (payload.schema !== "jewell-labs.self-hosted.discover.v1" || !payload.setupPrompt.includes("setup-host")) {
-        throw new Error("discover payload missing schema or prompt");
-      }
-    } finally {
-      open.child.kill();
+    const listed = await post(open.info.port, { jsonrpc: "2.0", id: 1, method: "tools/list" });
+    if (listed.status !== 200 || !listed.text.includes("discover")) throw new Error(`tools/list failed ${listed.status}`);
+    const called = await post(open.info.port, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "discover", arguments: {} } });
+    const parsed = JSON.parse(called.text);
+    const payload = JSON.parse(parsed.result.content[0].text);
+    if (payload.schema !== "jewell-labs.self-hosted.discover.v1" || !payload.setupPrompt.includes("setup-host")) {
+      throw new Error("discover payload missing schema or prompt");
     }
-    const gated = await startServer({
-      PORT: "0",
-      BIND_HOST: "127.0.0.1",
-      CF_ACCESS_TEAM_DOMAIN: "team.cloudflareaccess.com",
-      CF_ACCESS_AUD: "proof-aud",
-      SELFHOST_ACCESS_JWKS_FILE: jwksPath,
-    });
-    try {
-      const denied = await post(gated.info.port, { jsonrpc: "2.0", id: 1, method: "tools/list" });
-      if (denied.status !== 401) throw new Error(`expected 401 without jwt, got ${denied.status}`);
-      const header = b64url(JSON.stringify({ alg: "RS256", kid: "proof", typ: "JWT" }));
-      const body = b64url(JSON.stringify({
-        iss: "https://team.cloudflareaccess.com",
-        aud: "proof-aud",
-        exp: Math.floor(Date.now() / 1000) + 600,
-        sub: "proof",
-      }));
-      const sig = sign("RSA-SHA256", Buffer.from(`${header}.${body}`), privateKey).toString("base64url");
-      const allowed = await post(
-        gated.info.port,
-        { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "discover", arguments: {} } },
-        { "cf-access-jwt-assertion": `${header}.${body}.${sig}` },
-      );
-      if (allowed.status !== 200) throw new Error(`expected 200 with jwt, got ${allowed.status} ${allowed.text}`);
-    } finally {
-      gated.child.kill();
-    }
-    const refused = spawn(process.execPath, ["mcp/server.mjs"], {
-      cwd: root,
-      env: { ...process.env, BIND_HOST: "0.0.0.0", PORT: "0", CF_ACCESS_TEAM_DOMAIN: "", CF_ACCESS_AUD: "" },
-    });
-    const code = await new Promise((resolve) => refused.on("exit", resolve));
-    if (code === 0) throw new Error("non-loopback bind without access was accepted");
   } finally {
-    await rm(dir, { recursive: true, force: true });
+    open.child.kill();
   }
   console.log("mcp ok");
-} else if (id === "llama") {
-  const written = JSON.parse(await readFile(join(stateDir, "llama.json"), "utf8"));
-  if (written.profile !== discovery.llamaProfile?.id || written.args.join(" ") !== discovery.llamaProfile.args.join(" ")) {
-    console.error("llama.json does not match the selected profile");
+} else if (id === "llm") {
+  const written = JSON.parse(await readFile(join(stateDir, "llm.json"), "utf8"));
+  if (written.profile !== discovery.llmProfile?.id || written.args.join(" ") !== discovery.llmProfile.args.join(" ")) {
+    console.error("llm.json does not match the selected profile");
     process.exit(1);
   }
-  console.log(`llama ok profile=${written.profile}`);
+  console.log(`llm ok profile=${written.profile}`);
 } else if (id === "decision") {
+  const { decisionUnit } = await import("../decision/registry.mjs");
   const written = JSON.parse(await readFile(join(stateDir, "decision.json"), "utf8"));
-  const expectSecond = readHost().memGb >= 64;
-  if (written.secondProcess !== expectSecond || written.ctxSize !== 4096) {
-    console.error("decision.json does not match host memory");
+  if (JSON.stringify(written) !== JSON.stringify(decisionUnit())) {
+    console.error("decision.json does not match the decision registry");
     process.exit(1);
   }
-  console.log(`decision ok secondProcess=${written.secondProcess}`);
-} else if (id === "cloudflared") {
-  const written = JSON.parse(await readFile(join(stateDir, "cloudflared.json"), "utf8"));
-  if (!written.tokenPath.endsWith(".cloudflared/token") || written.command[0] !== "plugins/cloudflared/run-tunnel.sh") {
-    console.error("cloudflared unit is missing the token file");
+  console.log(`decision ok slots=${written.slots} models=${written.models.length}`);
+} else if (id === "cloudflare") {
+  const { readFileSync } = await import("node:fs");
+  const { cloudflareUnit, loadPolicy } = await import("../plugins/cloudflare/unit.mjs");
+  const { proveAccess } = await import("../plugins/cloudflare/prove.mjs");
+  const written = JSON.parse(await readFile(join(stateDir, "cloudflare.json"), "utf8"));
+  const expect = cloudflareUnit();
+  if (JSON.stringify(written) !== JSON.stringify(expect)) {
+    console.error("cloudflare unit does not match plugins/cloudflare");
     process.exit(1);
   }
-  console.log("cloudflared ok");
+  const mesh = JSON.parse(readFileSync(join(root, ".agents/mesh.json"), "utf8"));
+  if (JSON.stringify(mesh.access) !== JSON.stringify(loadPolicy().access)) {
+    console.error("mesh.json access does not match plugins/cloudflare/policy.json");
+    process.exit(1);
+  }
+  for (const file of [expect.tunnel.tokenPath, expect.auth.idFile, expect.auth.secretFile]) {
+    try {
+      const stat = await lstat(file);
+      if (stat.isFile() && (stat.mode & 0o777) !== 0o600) {
+        console.error(`${file} must be mode 0600`);
+        process.exit(1);
+      }
+    } catch {
+      // Absent on a machine that has not installed the token yet.
+    }
+  }
+  await proveAccess(root);
+  console.log("cloudflare ok");
 } else if (id === "sshd") {
   const written = JSON.parse(await readFile(join(stateDir, "sshd.json"), "utf8"));
-  const home = process.env.HOME ?? "/tmp";
-  const dir = join(home, ".ssh", "userland");
+  const dir = layout().sshd;
   if (written.listen !== "127.0.0.1" || written.port !== 2222 || written.passwordAuthentication !== false) {
     console.error("sshd unit is not loopback, port 2222, passwords off");
     process.exit(1);
@@ -236,7 +205,7 @@ if (id === "baseline") {
   const written = await readPortlessState(stateDir);
   const policy = loadPolicy();
   const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
-  if (written.version !== pins.portless || written.version !== policy.version || written.guestPort !== policy.guestPort || written.proxy !== policy.proxy) {
+  if (written.version !== pins.portless || written.version !== policy.version || written.guestPort !== policy.guestPort || written.proxy !== policy.proxy || written.stateDir !== layout().portless || policy.stateDir !== ".self-hosted/portless") {
     console.error("portless.json does not match the host policy");
     process.exit(1);
   }

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildDiscovery } from "../lib/discover.mjs";
-import { selectLlamaProfile } from "../lib/profiles.mjs";
+import { decisionSlots } from "../decision/registry.mjs";
+import { selectLlmProfile } from "../lib/profiles.mjs";
 
 test("mac studio 32GB selects the metal throughput profile", () => {
-  const profile = selectLlamaProfile({ os: "darwin", arch: "arm64", memGb: 32, cpus: 10, nvidia: false });
+  const profile = selectLlmProfile({ os: "darwin", arch: "arm64", memGb: 32, cpus: 10, nvidia: false });
   assert.equal(profile.id, "mac-studio-m1-max-32gb");
   assert.ok(profile.args.includes("q8_0"));
   assert.ok(profile.args.includes("0-7"));
@@ -13,7 +14,7 @@ test("mac studio 32GB selects the metal throughput profile", () => {
 });
 
 test("linux without nvidia uses the cpu profile and fills thread count", () => {
-  const profile = selectLlamaProfile({ os: "linux", arch: "arm64", memGb: 8, cpus: 4, nvidia: false });
+  const profile = selectLlmProfile({ os: "linux", arch: "arm64", memGb: 8, cpus: 4, nvidia: false });
   assert.equal(profile.id, "linux-cpu");
   assert.equal(profile.args[profile.args.indexOf("--threads") + 1], "4");
   assert.equal(profile.args[profile.args.indexOf("--n-gpu-layers") + 1], "0");
@@ -21,13 +22,16 @@ test("linux without nvidia uses the cpu profile and fills thread count", () => {
 
 test("jetson-style host uses cuda only when asked", () => {
   const host = { os: "linux", arch: "arm64", memGb: 16, cpus: 6, nvidia: true };
-  assert.equal(selectLlamaProfile(host).id, "linux-cuda");
+  assert.equal(selectLlmProfile(host).id, "linux-cuda");
 });
 
 test("discover includes the setup prompt and marks proof plugins", () => {
   const discovery = buildDiscovery({ ...process.env, ALLOW_PUBLIC_REPO_RUNNER: "" });
   assert.equal(discovery.schema, "jewell-labs.self-hosted.discover.v1");
   assert.match(discovery.setupPrompt, /setup-host/);
+  assert.match(discovery.setupPrompt, /container proof/);
+  assert.match(discovery.setupPrompt, /Do not invent a team domain/);
+  assert.match(discovery.setupPrompt, /llmProfile/);
   assert.equal(discovery.setupPromptSha256.length, 64);
   const proof = discovery.plugins.filter((plugin) => plugin.proofRequired && plugin.applicable).map((plugin) => plugin.id);
   assert.deepEqual(proof, ["baseline", "mcp"]);
@@ -38,5 +42,8 @@ test("discover includes the setup prompt and marks proof plugins", () => {
     assert.equal(plugin.proofRequired, false);
     assert.match(plugin.setup[0], new RegExp(`^nix run \\.#setup-${id}$`));
   }
-  assert.equal(discovery.plugins.find((plugin) => plugin.id === "decision").secondProcess, discovery.host.memGb >= 64);
+  const decision = discovery.plugins.find((plugin) => plugin.id === "decision");
+  assert.equal(decision.slots, decisionSlots(discovery.host.memGb));
+  assert.equal(decision.secondProcess, undefined);
+  assert.equal(discovery.plugins.some((plugin) => plugin.id === "llama"), false);
 });

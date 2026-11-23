@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Log stream | self-hosted</title>
+  <meta name="event-stream" content="/events">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <a class="skip" href="#log-heading">Skip to log</a>
+  <header class="banner">
+    <p class="mark">self-hosted</p>
+    <h1 id="log-heading" tabindex="-1">Log stream</h1>
+    <p class="lede">Live rows come from the MCP event stream. The same Cloudflare Access application as the tools.</p>
+    <p id="log-status" role="status"></p>
+    <p id="log-alert" role="alert"></p>
+  </header>
+  <search>
+  <form class="filter" action="" method="get">
+    <label for="plugin-filter">Plugin</label>
+    <input id="plugin-filter" name="plugin" type="search" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-describedby="filter-hint">
+    <label for="type-filter">Type</label>
+    <input id="type-filter" name="type" type="search" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-describedby="filter-hint">
+    <label for="name-filter">Name</label>
+    <input id="name-filter" name="name" type="search" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-describedby="filter-hint">
+    <p id="filter-hint">Leave a field empty to include every value. Separate several values with a comma.</p>
+    <button type="submit">Filter</button>
+  </form>
+  </search>
+  <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="log-caption">
+    <table>
+      <caption id="log-caption">Events across plugins</caption>
+      <thead>
+        <tr>
+          <th scope="col">Time</th>
+          <th scope="col">Plugin</th>
+          <th scope="col">Type</th>
+          <th scope="col">Name</th>
+          <th scope="col">Detail</th>
+        </tr>
+      </thead>
+      <tbody id="log-rows">
+        <tr class="empty">
+          <td colspan="5">No events yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <noscript>
+    <p>This page fills the table from the MCP event stream. Without JavaScript, call <code>events.webhooks</code>.</p>
+  </noscript>
+  <script src="app.js" type="module"></script>
+</body>
+</html>
