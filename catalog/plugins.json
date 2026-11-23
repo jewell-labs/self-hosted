@@ -1,0 +1,53 @@
+{
+  "schema": "jewell-labs.self-hosted.catalog.v1",
+  "plugins": [
+    {
+      "id": "baseline",
+      "summary": "Record the host facts the other plugins just discovered.",
+      "proofRequired": true,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs baseline"],
+      "validate": ["node bin/check.mjs baseline"]
+    },
+    {
+      "id": "mcp",
+      "summary": "Serve one MCP tool, discover, on loopback. A non-loopback bind requires Cloudflare Access.",
+      "proofRequired": true,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs mcp"],
+      "validate": ["node bin/check.mjs mcp"]
+    },
+    {
+      "id": "llama",
+      "summary": "llama.cpp server tuned for single-stream throughput. One resident model.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs llama"],
+      "validate": ["node bin/check.mjs llama"]
+    },
+    {
+      "id": "decision",
+      "summary": "Decision-modality models on the llama.cpp router. A second process only when the host has 64GB or more.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs decision"],
+      "validate": ["node bin/check.mjs decision"]
+    },
+    {
+      "id": "cloudflared",
+      "summary": "Cloudflare Tunnel unit that reads the token from a mode 0600 file, never from git.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs cloudflared"],
+      "validate": ["node bin/check.mjs cloudflared"]
+    },
+    {
+      "id": "actions-runner",
+      "summary": "GitHub Actions self-hosted runner. Refuses a public repository unless the operator overrides it.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs actions-runner"],
+      "validate": ["node bin/check.mjs actions-runner"]
+    }
+  ]
+}

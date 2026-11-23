@@ -1,0 +1,5 @@
+.self-hosted/
+node_modules/
+.env
+*.token
+.DS_Store
