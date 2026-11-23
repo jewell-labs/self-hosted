@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { verifyAccessJwt } from "../lib/access.mjs";
+import { fetchJwks, verifyAccessJwt } from "../lib/access.mjs";
 
 function b64url(value) {
   const buf = Buffer.isBuffer(value) ? value : Buffer.from(value);
@@ -37,4 +37,16 @@ test("accepts a Cloudflare Access shaped RS256 jwt and rejects a bad audience", 
   const bad = `${header}.${badBody}.${sign("RSA-SHA256", Buffer.from(`${header}.${badBody}`), privateKey).toString("base64url")}`;
   await assert.rejects(() => verifyAccessJwt(bad, config, env), /aud/);
   await rm(dir, { recursive: true, force: true });
+});
+
+test("caches a jwks file so a later verify does not reread it", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "access-cache-"));
+  const jwks = join(dir, "jwks.json");
+  await writeFile(jwks, JSON.stringify({ keys: [{ kid: "cached" }] }));
+  const env = { SELFHOST_ACCESS_JWKS_FILE: jwks };
+  const first = await fetchJwks("https://team.cloudflareaccess.com/cdn-cgi/access/certs", env);
+  await rm(dir, { recursive: true, force: true });
+  const second = await fetchJwks("https://team.cloudflareaccess.com/cdn-cgi/access/certs", env);
+  assert.equal(second.keys[0].kid, "cached");
+  assert.equal(first, second);
 });

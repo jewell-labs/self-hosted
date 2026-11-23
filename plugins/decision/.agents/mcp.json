@@ -1,0 +1,33 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "decision.setup",
+      "description": "Write the decision-model placement. Under 64GB that stays on one router.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "decision"
+      }
+    },
+    {
+      "name": "decision.check",
+      "description": "Check the decision unit against this host.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "decision"
+      }
+    }
+  ]
+}

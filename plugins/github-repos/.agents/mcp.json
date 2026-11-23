@@ -1,0 +1,33 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "github-repos.setup",
+      "description": "Write the repo list and interval from github-repos/config. Does not sync.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "github-repos"
+      }
+    },
+    {
+      "name": "github-repos.check",
+      "description": "Check the github-repos unit against this host.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "github-repos"
+      }
+    }
+  ]
+}

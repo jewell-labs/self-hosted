@@ -1,0 +1,33 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "sshd.setup",
+      "description": "Write the userland sshd unit. Keys and the CA stay outside git.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "sshd"
+      }
+    },
+    {
+      "name": "sshd.check",
+      "description": "Check the sshd unit against this host.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "sshd"
+      }
+    }
+  ]
+}

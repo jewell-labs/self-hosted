@@ -1,0 +1,42 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "discover",
+      "description": "Describe this host and every plugin, including the setup prompt and the setup and validate commands.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "discover" }
+    },
+    {
+      "name": "mesh.list",
+      "description": "List mesh tools, the repos that declared them, and the Cloudflare Access limits agents must stay inside.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "mesh-list" }
+    },
+    {
+      "name": "mesh.lsp",
+      "description": "Return the language servers declared for this repository.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "run": { "type": "mesh-lsp" }
+    },
+    {
+      "name": "mesh.skill",
+      "description": "Return one skill by name. The name is a skill id, not a path.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "run": { "type": "mesh-skill" }
+    }
+  ]
+}

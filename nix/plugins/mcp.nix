@@ -10,7 +10,7 @@ let
 in
 plugin {
   id = "mcp";
-  summary = "Serve one MCP tool, discover, on loopback. A non-loopback bind requires Cloudflare Access.";
+  summary = "Serve mesh MCP tools declared under .agents. A non-loopback bind requires Cloudflare Access, and so does every destructive tool.";
   proofRequired = true;
   runtimeInputs = [ nodejs ];
   mainProgram = "selfhost-mcp";

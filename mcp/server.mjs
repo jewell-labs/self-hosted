@@ -1,9 +1,9 @@
 import { createServer } from "node:http";
 import { accessConfig, verifyAccessJwt } from "../lib/access.mjs";
-import { buildDiscovery } from "../lib/discover.mjs";
+import { callTool, loadMesh, mcpTools, MeshError } from "../lib/mesh.mjs";
 
 const SERVER_NAME = "self-hosted";
-const SERVER_VERSION = "0.1.0";
+const SERVER_VERSION = "0.2.0";
 
 function bindIsLoopback(host) {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";
@@ -27,6 +27,7 @@ export function createMcpServer(env = process.env) {
       res.writeHead(404).end();
       return;
     }
+    let jwtVerified = false;
     if (access.required) {
       const token = req.headers["cf-access-jwt-assertion"];
       if (typeof token !== "string" || token === "") {
@@ -35,6 +36,7 @@ export function createMcpServer(env = process.env) {
       }
       try {
         await verifyAccessJwt(token, access, env);
+        jwtVerified = true;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: message }));
@@ -50,10 +52,14 @@ export function createMcpServer(env = process.env) {
         res.writeHead(202).end();
         return;
       }
-      const result = handleRpc(body.method, body.params ?? {});
+      const result = await handleRpc(body.method, body.params ?? {}, { env, jwtVerified });
       res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
       res.end(JSON.stringify({ jsonrpc: "2.0", id: body.id ?? null, result }));
     } catch (error) {
+      if (error instanceof MeshError && error.status === 401 && !res.headersSent) {
+        res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: error.message }));
+        return;
+      }
       const message = error instanceof Error ? error.message : String(error);
       if (!res.headersSent) {
         res.writeHead(500, { "content-type": "application/json" });
@@ -65,7 +71,7 @@ export function createMcpServer(env = process.env) {
   return { server, bindHost, access };
 }
 
-function handleRpc(method, params) {
+async function handleRpc(method, params, ctx) {
   if (method === "initialize") {
     return {
       protocolVersion: "2025-03-26",
@@ -74,23 +80,10 @@ function handleRpc(method, params) {
     };
   }
   if (method === "tools/list") {
-    return {
-      tools: [
-        {
-          name: "discover",
-          description:
-            "Describe this host and every self-hosted plugin, including the setup-host prompt, setup commands, and validate commands. " +
-            "An agent uses this output and that prompt to install and check plugins. MCP tools are served only through Cloudflare Access when the server is not bound to loopback.",
-          inputSchema: { type: "object", properties: {}, additionalProperties: false },
-          annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-        },
-      ],
-    };
+    return { tools: mcpTools(await loadMesh(ctx.env)) };
   }
   if (method === "tools/call") {
-    if (params.name !== "discover") throw new Error(`unknown tool ${params.name}`);
-    const discovery = buildDiscovery();
-    return { content: [{ type: "text", text: JSON.stringify(discovery) }], isError: false };
+    return callTool(params.name, params.arguments ?? {}, ctx.env, { jwtVerified: ctx.jwtVerified });
   }
   throw new Error(`unsupported method ${method}`);
 }

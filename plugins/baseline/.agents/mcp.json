@@ -1,0 +1,33 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "baseline.setup",
+      "description": "Write the host facts discover already reported. Does not start a service.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "baseline"
+      }
+    },
+    {
+      "name": "baseline.check",
+      "description": "Check the baseline unit against this host.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "baseline"
+      }
+    }
+  ]
+}

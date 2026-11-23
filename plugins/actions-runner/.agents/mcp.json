@@ -1,0 +1,33 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "actions-runner.setup",
+      "description": "Register a GitHub Actions runner. Refuses a public repo unless the operator overrides it. Requires a Cloudflare Access JWT.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "actions-runner"
+      }
+    },
+    {
+      "name": "actions-runner.check",
+      "description": "Check the actions-runner unit against this host.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "actions-runner"
+      }
+    }
+  ]
+}

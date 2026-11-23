@@ -1,0 +1,33 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "agent-browser.setup",
+      "description": "Write the agent-browser unit. Does not download a browser.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "agent-browser"
+      }
+    },
+    {
+      "name": "agent-browser.check",
+      "description": "Check the agent-browser unit against this host.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "agent-browser"
+      }
+    }
+  ]
+}

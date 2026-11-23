@@ -1,0 +1,17 @@
+{
+  "schema": "jewell-labs.agents.mesh.v1",
+  "endpointSuffixes": [],
+  "access": {
+    "serviceTokensDoNotConsumeSeats": true,
+    "freePlanUserSeats": 50,
+    "serviceTokenLimit": 50,
+    "mcpPortals": 50,
+    "serversPerPortal": 120,
+    "upstreamToolCallTimeoutSeconds": 60,
+    "portalSessionInactivityHours": 24,
+    "oneSharedServiceToken": true,
+    "secretPrefix": "cfast_",
+    "headers": ["CF-Access-Client-Id", "CF-Access-Client-Secret"],
+    "assertionHeader": "Cf-Access-Jwt-Assertion"
+  }
+}

@@ -4,12 +4,12 @@ This repository sets up a host. It is not one machine. The Mac Studio profile is
 
 ## Start here
 
-1. Run `node bin/discover.mjs` or call the MCP tool `discover`.
+1. Call the MCP tool `discover`, or run `node bin/discover.mjs`.
 2. Follow `prompts/setup-host.md` and the commands in that result. Do not invent flags, ports, or plugins.
 3. Select a plugin only when `applicable` is true. A proof selects the plugins that are both `applicable` and `proofRequired`.
-4. A plugin is done when every `validate` command exits 0. Those commands are `nix run .#setup-<id>` and `nix run .#check-<id>`.
+4. Do the plugin's work by calling `<id>.setup` and `<id>.check`. A plugin is done when every `validate` command exits 0. Those commands are `nix run .#setup-<id>` and `nix run .#check-<id>`.
 
-`node mcp/server.mjs` serves `discover` on `127.0.0.1:8473`. It refuses any other bind unless `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set. With those set, `/mcp` requires a Cloudflare Access JWT (`Cf-Access-Jwt-Assertion`, RS256, issuer `https://<team>`, audience `CF_ACCESS_AUD`).
+Infra skills, MCP, and language servers are in `.agents/`. Each plugin adds `plugins/<id>/.agents`. `node mcp/server.mjs` serves that mesh on `127.0.0.1:8473`. It refuses any other bind unless `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set. With those set, `/mcp` requires a Cloudflare Access JWT (`Cf-Access-Jwt-Assertion`, RS256, issuer `https://<team>`, audience `CF_ACCESS_AUD`). A destructive tool requires that JWT even on loopback. Other repos listed in `github-repos/config` are added to the mesh and their tools are not executed. Agents share one Access service token. The seat limits are in `.agents/mesh.json`.
 
 ## Do not
 
