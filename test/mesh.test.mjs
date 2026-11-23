@@ -95,7 +95,7 @@ test("mesh lists plugin tools, keeps external commands unexecuted, and hides sec
     const runner = mesh.tools.find((tool) => tool.name === "actions-runner.setup");
     assert.equal(runner.destructive, true);
     assert.equal(runner.callable, true);
-    assert.equal(mesh.tools.filter((tool) => tool.trusted && tool.run.type === "setup").length, 10);
+    assert.equal(mesh.tools.filter((tool) => tool.trusted && tool.run.type === "setup").length, 12);
     const listed = await callTool("mesh.list", {}, env, { mesh });
     assert.equal(listed.isError, false);
     assert.equal(listed.content[0].text.includes("cfast_abc"), false);

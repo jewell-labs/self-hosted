@@ -10,6 +10,8 @@ let
     "github-repos"
     "agent-desktop"
     "agent-browser"
+    "simulators"
+    "portless"
   ];
 in
 runCommand "selfhost-plugins-check"

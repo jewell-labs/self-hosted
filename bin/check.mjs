@@ -217,6 +217,30 @@ if (id === "baseline") {
     process.exit(1);
   }
   console.log(`agent-browser ok ${written.version}`);
+} else if (id === "simulators") {
+  const { detectSimulators } = await import("../simulators/detect.mjs");
+  const { readSimulatorState } = await import("../simulators/state.mjs");
+  const written = await readSimulatorState(stateDir);
+  const live = await detectSimulators();
+  const left = (written.available ?? []).map((item) => item.udid).join(",");
+  const right = live.map((item) => item.udid).join(",");
+  if (written.claim !== "all" || left !== right) {
+    console.error("simulators.json does not match the detected devices");
+    process.exit(1);
+  }
+  console.log(`simulators ok ${live.length}`);
+} else if (id === "portless") {
+  const { readFileSync } = await import("node:fs");
+  const { loadPolicy } = await import("../portless/host.mjs");
+  const { readPortlessState } = await import("../portless/state.mjs");
+  const written = await readPortlessState(stateDir);
+  const policy = loadPolicy();
+  const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
+  if (written.version !== pins.portless || written.version !== policy.version || written.guestPort !== policy.guestPort || written.proxy !== policy.proxy) {
+    console.error("portless.json does not match the host policy");
+    process.exit(1);
+  }
+  console.log(`portless ok ${written.version}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("actions-runner remains refused on a public repo");

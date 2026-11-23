@@ -1,0 +1,13 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { detectSimulators } from "./detect.mjs";
+
+export async function writeSimulatorState(dir, env) {
+  const unit = { claim: "all", available: await detectSimulators(env) };
+  await writeFile(join(dir, "simulators.json"), `${JSON.stringify(unit, null, 2)}\n`);
+  return unit;
+}
+
+export async function readSimulatorState(dir) {
+  return JSON.parse(await readFile(join(dir, "simulators.json"), "utf8"));
+}

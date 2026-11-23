@@ -125,6 +125,20 @@ if (id === "baseline") {
   };
   await writeFile(join(stateDir, "agent-browser.json"), `${JSON.stringify(unit, null, 2)}\n`);
   console.log(`wrote ${join(stateDir, "agent-browser.json")} version=${unit.version}`);
+} else if (id === "simulators") {
+  const { writeSimulatorState } = await import("../simulators/state.mjs");
+  const unit = await writeSimulatorState(stateDir, process.env);
+  console.log(`wrote ${join(stateDir, "simulators.json")} available=${unit.available.length}`);
+} else if (id === "portless") {
+  const { loadPolicy } = await import("../portless/host.mjs");
+  const { writePortlessState } = await import("../portless/state.mjs");
+  const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
+  if (loadPolicy().version !== pins.portless) {
+    console.error("portless policy version does not match catalog/pins.json");
+    process.exit(1);
+  }
+  const unit = await writePortlessState(stateDir);
+  console.log(`wrote ${join(stateDir, "portless.json")} version=${unit.version}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");

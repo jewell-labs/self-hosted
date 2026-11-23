@@ -1,0 +1,62 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "simulators.setup",
+      "description": "Record every available iOS simulator. An empty list means this host has none.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "simulators" }
+    },
+    {
+      "name": "simulators.check",
+      "description": "Check the recorded iOS simulators against a fresh detect.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "simulators" }
+    },
+    {
+      "name": "simulators.list",
+      "description": "List every available iOS simulator. The list is empty when this host has none.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "simulators-list", "plugin": "simulators" }
+    },
+    {
+      "name": "simulators.boot",
+      "description": "Boot one detected iOS simulator by udid.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "udid": { "type": "string" } },
+        "required": ["udid"],
+        "additionalProperties": false
+      },
+      "run": { "type": "simulators-boot", "plugin": "simulators" }
+    },
+    {
+      "name": "simulators.shutdown",
+      "description": "Shut down one detected iOS simulator by udid.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "udid": { "type": "string" } },
+        "required": ["udid"],
+        "additionalProperties": false
+      },
+      "run": { "type": "simulators-shutdown", "plugin": "simulators" }
+    },
+    {
+      "name": "simulators.openurl",
+      "description": "Open a local http or https URL on one detected iOS simulator.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "udid": { "type": "string" }, "url": { "type": "string" } },
+        "required": ["udid", "url"],
+        "additionalProperties": false
+      },
+      "run": { "type": "simulators-openurl", "plugin": "simulators" }
+    }
+  ]
+}

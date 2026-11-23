@@ -25,6 +25,8 @@ Call the tools over streamable HTTP `POST /mcp`. `node bin/discover.mjs` prints 
 | `agent-desktop` | Installs agent-desktop 1.3.1, including `sandbox`. The first macOS guest needs a person to grant Accessibility. |
 | `agent-browser` | Installs agent-browser 0.43.0. `agent-browser install` downloads Chrome for Testing into the user directory. |
 | `actions-runner` | Refuses to install when the GitHub repo is public. Set `ALLOW_PUBLIC_REPO_RUNNER=1` only if you accept pull-request code on that machine. |
+| `simulators` | Claims every available iOS simulator. A Linux host, or a Mac without simulators, records an empty list. |
+| `portless` | Pins Portless 0.18.1 and the host proxy, CA, and guest port. Apps share one proxy. |
 
 Setup and validate go through Nix. The package versions are in `catalog/pins.json`. See [`nix/README.md`](nix/README.md).
 

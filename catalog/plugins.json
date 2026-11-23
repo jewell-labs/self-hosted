@@ -80,6 +80,22 @@
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
       "setup": ["nix run .#setup-actions-runner"],
       "validate": ["nix run .#check-actions-runner"]
+    },
+    {
+      "id": "simulators",
+      "summary": "Claim every available iOS simulator. A host with none records an empty list.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["nix run .#setup-simulators"],
+      "validate": ["nix run .#check-simulators"]
+    },
+    {
+      "id": "portless",
+      "summary": "One Portless proxy for local web apps, agent-browser, agent-desktop guests, and simulators.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["nix run .#setup-portless"],
+      "validate": ["nix run .#check-portless"]
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "schema": "jewell-labs.portless.policy.v1",
+  "version": "0.18.1",
+  "stateDir": ".portless",
+  "caFile": "ca.pem",
+  "guestPort": 8443,
+  "proxy": "https",
+  "appPortRange": [4000, 4999]
+}

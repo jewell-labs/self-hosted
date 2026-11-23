@@ -1,0 +1,49 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "portless.setup",
+      "description": "Record the host Portless policy. Does not start the proxy.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "portless" }
+    },
+    {
+      "name": "portless.check",
+      "description": "Check the recorded Portless policy against the pinned version.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "portless" }
+    },
+    {
+      "name": "portless.status",
+      "description": "Read the Portless proxy, CA path, guest bridge, and installed version.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "portless-status", "plugin": "portless" }
+    },
+    {
+      "name": "portless.urls",
+      "description": "Build local and guest URLs for a checkout prefix and service names.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "services": { "type": "array" },
+          "prefix": { "type": "string" },
+          "repo": { "type": "string" }
+        },
+        "required": ["services"],
+        "additionalProperties": false
+      },
+      "run": { "type": "portless-urls", "plugin": "portless" }
+    },
+    {
+      "name": "portless.forward",
+      "description": "Listen on the VM bridge and forward guest HTTPS to the local Portless proxy.",
+      "destructive": true,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "portless-forward", "plugin": "portless" }
+    }
+  ]
+}

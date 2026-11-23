@@ -16,6 +16,8 @@ let
     "agent-desktop"
     "agent-browser"
     "actions-runner"
+    "simulators"
+    "portless"
   ];
   catalogIds = map (pluginSpec: pluginSpec.id) catalog.plugins;
   packages = {
@@ -36,6 +38,14 @@ let
     agent-desktop = pkgs.callPackage ./plugins/agent-desktop.nix { inherit plugin pins; };
     agent-browser = pkgs.callPackage ./plugins/agent-browser.nix { inherit plugin pins; };
     actions-runner = pkgs.callPackage ./plugins/actions-runner.nix { inherit plugin pins; };
+    simulators = plugin {
+      id = "simulators";
+      summary = "Claim every available iOS simulator. A host with none records an empty list.";
+    };
+    portless = plugin {
+      id = "portless";
+      summary = "One Portless proxy for local web apps, agent-browser, agent-desktop guests, and simulators.";
+    };
   };
 in
 assert catalogIds == names;
