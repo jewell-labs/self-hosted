@@ -21,6 +21,7 @@ Call `discover` over streamable HTTP `POST /mcp`. The same JSON is printed by `n
 | `decision` | Models whose output modality includes `decisions`. Under 64GB they stay on the one router. A second process is recorded only at 64GB and above. |
 | `cloudflared` | Unit that reads `~/.cloudflared/token` (mode `0600`). The token is not stored here. |
 | `sshd` | Userland `sshd` on `127.0.0.1:2222`, passwords off, Cloudflare Access SSH CA. The CA and keys stay in `~/.ssh/userland`. |
+| `github-repos` | Syncs the repos in `github-repos/config`. `interval_seconds` in that file is how often the LaunchAgent runs. |
 | `actions-runner` | Refuses to install when the GitHub repo is public. Set `ALLOW_PUBLIC_REPO_RUNNER=1` only if you accept pull-request code on that machine. |
 
 Setup and validate:

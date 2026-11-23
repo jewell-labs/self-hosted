@@ -85,6 +85,22 @@ if (id === "baseline") {
   };
   await writeFile(join(stateDir, "sshd.json"), `${JSON.stringify(unit, null, 2)}\n`);
   console.log(`wrote ${join(stateDir, "sshd.json")}`);
+} else if (id === "github-repos") {
+  const { execFileSync } = await import("node:child_process");
+  const printed = execFileSync("bash", ["github-repos/ghref", "print-config"], { cwd: root, encoding: "utf8" });
+  const lines = printed.trim().split("\n");
+  const intervalLine = lines[0] ?? "";
+  if (!intervalLine.startsWith("interval_seconds=")) {
+    console.error("github-repos config did not print an interval");
+    process.exit(1);
+  }
+  const unit = {
+    intervalSeconds: Number(intervalLine.slice("interval_seconds=".length)),
+    repos: lines.slice(1),
+    config: "github-repos/config",
+  };
+  await writeFile(join(stateDir, "github-repos.json"), `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${join(stateDir, "github-repos.json")} every ${unit.intervalSeconds}s`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");

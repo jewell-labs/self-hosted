@@ -177,6 +177,28 @@ if (id === "baseline") {
     }
   }
   console.log("sshd ok");
+} else if (id === "github-repos") {
+  const { execFileSync } = await import("node:child_process");
+  const { readFileSync } = await import("node:fs");
+  const written = JSON.parse(await readFile(join(stateDir, "github-repos.json"), "utf8"));
+  const script = readFileSync(join(root, "github-repos/ghref"), "utf8");
+  const config = readFileSync(join(root, "github-repos/config"), "utf8");
+  if (script.includes("REPOS=") || /integer>\d+<\/integer>/.test(script) || /\b900\b/.test(script)) {
+    console.error("ghref hardcodes a repo list or interval; those belong in github-repos/config");
+    process.exit(1);
+  }
+  const interval = Number((config.match(/^interval_seconds=(\d+)$/m) ?? [])[1]);
+  const repos = config.split("\n").filter((line) => line !== "" && !line.startsWith("#") && !line.startsWith("interval_seconds="));
+  const printed = execFileSync("bash", ["github-repos/ghref", "print-config"], { cwd: root, encoding: "utf8" }).trim().split("\n");
+  if (written.intervalSeconds !== interval || printed[0] !== `interval_seconds=${interval}`) {
+    console.error("recorded interval does not match github-repos/config");
+    process.exit(1);
+  }
+  if (written.repos.join("\n") !== repos.join("\n") || printed.slice(1).join("\n") !== repos.join("\n")) {
+    console.error("recorded repos do not match github-repos/config");
+    process.exit(1);
+  }
+  console.log(`github-repos ok every ${interval}s`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("actions-runner remains refused on a public repo");

@@ -1,0 +1,5 @@
+# ghref reads this file only. The repo list and the sync interval are not set anywhere else.
+interval_seconds=900
+
+jewell-labs/self-hosted
+Flag-Seeker/flagseeker

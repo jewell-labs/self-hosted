@@ -50,6 +50,14 @@
       "validate": ["node bin/check.mjs sshd"]
     },
     {
+      "id": "github-repos",
+      "summary": "Sync the repos named in github-repos/config. The sync interval is interval_seconds in that file.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs github-repos"],
+      "validate": ["node bin/check.mjs github-repos"]
+    },
+    {
       "id": "actions-runner",
       "summary": "GitHub Actions self-hosted runner. Refuses a public repository unless the operator overrides it.",
       "proofRequired": false,

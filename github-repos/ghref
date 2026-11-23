@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# Read-only main worktrees under ~/github, backed by bare mirrors.
+# The repo list and the sync interval come from ./config next to this file.
+#
+#   github-repos/ghref                       sync, then re-lock ~/github read-only
+#   github-repos/ghref new <org/repo> <branch> [dir]
+#   github-repos/ghref install | uninstall   schedule sync from config
+set -u
+shopt -s nullglob
+
+ROOT=$(cd "$(dirname "$0")" && pwd)
+CONFIG=$ROOT/config
+[ -f "$CONFIG" ] || { echo "ghref: missing $CONFIG" >&2; exit 1; }
+
+interval=
+repos=()
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+    ''|'#'*) continue ;;
+    interval_seconds=*) interval=${line#interval_seconds=} ;;
+    *) repos+=("$line") ;;
+  esac
+done < "$CONFIG"
+[ -n "$interval" ] || { echo "ghref: config has no interval_seconds" >&2; exit 1; }
+[ "${#repos[@]}" -gt 0 ] || { echo "ghref: config has no repos" >&2; exit 1; }
+
+REF=${GHREF_REF:-$HOME/github}
+STORE=${GHREF_STORE:-$HOME/.local/share/ghref}
+BASE=${GHREF_BASE:-https://github.com/}
+LABEL=local.ghref
+PLIST=$HOME/Library/LaunchAgents/$LABEL.plist
+LOG=$HOME/Library/Logs/ghref.log
+BIN=${GHREF_BIN:-$HOME/.local/bin/ghref}
+
+warn(){ echo "WARN $*"; }
+die(){ echo "ghref: $*" >&2; exit 1; }
+default_branch(){ git -C "$1" symbolic-ref -q --short refs/remotes/origin/HEAD; }
+
+link_issue_branch(){
+  local r=$1 br=$2 dir=$3 base_ref=$4 n base
+  [[ $br =~ ^issue-([0-9]+)-.+ ]] || return 0
+  n=${BASH_REMATCH[1]}
+  base=${base_ref#origin/}
+  command -v gh >/dev/null 2>&1 || { warn "$r: gh is not on PATH; $br was not linked to issue #$n"; return 0; }
+  if ! ( cd "$dir" && gh issue develop "$n" --repo "$r" --name "$br" --base "$base" ); then
+    warn "$r: worktree is ready, but linking $br to issue #$n failed"
+  fi
+}
+
+sync_one(){
+  local r=$1 bare=$STORE/$1.git wt=$REF/$1 b out
+  if [ ! -d "$bare" ]; then
+    mkdir -p "${bare%/*}"
+    git init -q --bare "$bare" && git -C "$bare" remote add origin "$BASE$r.git" || { warn "$r: init failed"; return; }
+  fi
+  printf '#!/bin/sh\ncase "$(git rev-parse --show-toplevel)" in "%s"/*) echo "%s is read-only reference. Use: ghref new <org/repo> <branch>" >&2; exit 1;; esac\nexit 0\n' "$REF" "$REF" > "$bare/hooks/pre-commit"
+  chmod +x "$bare/hooks/pre-commit"
+  out=$(git -C "$bare" fetch -q --prune --prune-tags --tags origin 2>&1) || { warn "$r: fetch failed: $(grep -m1 -e fatal -e error <<<"$out")"; return; }
+  git -C "$bare" remote set-head origin -a >/dev/null 2>&1
+  b=$(default_branch "$bare") || { warn "$r: no remote default branch (empty repo?)"; return; }
+  git -C "$bare" worktree prune
+  if [ -f "$wt/.git" ]; then
+    [ -z "$(git -C "$wt" status --porcelain)" ] || { warn "$r: dirty main worktree (should be impossible), not updated"; return; }
+    git -C "$wt" checkout -q --detach "$b" || { warn "$r: checkout of $b failed"; return; }
+  elif [ -e "$wt" ]; then
+    warn "$r: $wt exists but is not a ghref worktree (old clone?) — remove it and rerun"; return
+  else
+    mkdir -p "${wt%/*}"
+    git -C "$bare" worktree add -q --detach "$wt" "$b" || { warn "$r: worktree add failed"; return; }
+  fi
+  echo "ok   $r @ $(git -C "$wt" rev-parse --short HEAD) ($b)"
+}
+
+write_plist(){
+  mkdir -p "${PLIST%/*}" "${LOG%/*}"
+  cat > "$PLIST" <<PL
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>$LABEL</string>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>$ROOT/ghref</string><string>sync</string></array>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+  <key>StartInterval</key><integer>$interval</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>$LOG</string>
+  <key>StandardErrorPath</key><string>$LOG</string>
+</dict></plist>
+PL
+}
+
+case ${1:-sync} in
+  print-config)
+    printf 'interval_seconds=%s\n' "$interval"
+    printf '%s\n' "${repos[@]}" ;;
+  sync)
+    mkdir -p "$STORE" "$REF"
+    mkdir "$STORE/.lock" 2>/dev/null || { echo "ghref: another sync is running"; exit 0; }
+    chmod -R u+w "$REF"
+    trap 'chmod -R a-w "$REF"; rmdir "$STORE/.lock"' EXIT
+    for r in "${repos[@]}"; do sync_one "$r"; done ;;
+  new)
+    [ $# -ge 3 ] || die "usage: ghref new <org/repo> <branch> [dir]"
+    r=$2 br=$3 bare=$STORE/$2.git; [ -d "$bare" ] || die "unknown repo $r (not in the list or not synced yet)"
+    dir=${4:-$HOME/work/${r#*/}-${br//\//-}}
+    case $dir in "$REF"/*) die "work trees must not live under $REF";; esac
+    git -C "$bare" fetch -q --prune origin || die "fetch failed"
+    b=$(default_branch "$bare") || die "no default branch"
+    mkdir -p "${dir%/*}"
+    git -C "$bare" worktree add --no-track -b "$br" "$dir" "$b" || die "worktree add failed"
+    link_issue_branch "$r" "$br" "$dir" "$b"
+    echo "ready: $dir" ;;
+  install)
+    write_plist
+    mkdir -p "${BIN%/*}"
+    ln -sfn "$ROOT/ghref" "$BIN"
+    launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+    launchctl bootstrap "gui/$(id -u)" "$PLIST"
+    echo "scheduled every ${interval}s from $ROOT/ghref; log: $LOG" ;;
+  uninstall)
+    launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+    rm -f "$PLIST"
+    echo "unscheduled" ;;
+  *) die "unknown command $1" ;;
+esac

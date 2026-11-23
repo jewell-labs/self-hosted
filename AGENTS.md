@@ -17,6 +17,7 @@ This repository sets up a host. It is not one machine. The Mac Studio profile is
 - Install `actions-runner` on a public repository. Pull requests would run on the host. The setup command exits 1 unless `ALLOW_PUBLIC_REPO_RUNNER=1`.
 - Start a second llama.cpp process when the discover result says `secondProcess` is false (hosts under 64GB).
 - Treat `bin/install-darwin-llama.mjs` as the Linux or Jetson install. Linux uses the profile `discover` already rendered.
+- Put a repo name or a sync interval anywhere except `github-repos/config`. `github-repos/ghref` reads that file.
 
 ## Checks
 
