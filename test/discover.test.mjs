@@ -33,5 +33,10 @@ test("discover includes the setup prompt and marks proof plugins", () => {
   assert.deepEqual(proof, ["baseline", "mcp"]);
   const runner = discovery.plugins.find((plugin) => plugin.id === "actions-runner");
   assert.equal(runner.publicRunnerAllowed, false);
+  for (const id of ["agent-desktop", "agent-browser", "github-repos"]) {
+    const plugin = discovery.plugins.find((item) => item.id === id);
+    assert.equal(plugin.proofRequired, false);
+    assert.match(plugin.setup[0], new RegExp(`^nix run \\.#setup-${id}$`));
+  }
   assert.equal(discovery.plugins.find((plugin) => plugin.id === "decision").secondProcess, discovery.host.memGb >= 64);
 });

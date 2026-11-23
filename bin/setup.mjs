@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { buildDiscovery, repoRoot } from "../lib/discover.mjs";
@@ -11,7 +12,7 @@ if (!id) {
 }
 
 const root = repoRoot();
-const stateDir = join(root, ".self-hosted");
+const stateDir = process.env.SELFHOST_STATE ?? join(root, ".self-hosted");
 const discovery = buildDiscovery();
 const plugin = discovery.plugins.find((item) => item.id === id);
 if (!plugin) {
@@ -101,6 +102,29 @@ if (id === "baseline") {
   };
   await writeFile(join(stateDir, "github-repos.json"), `${JSON.stringify(unit, null, 2)}\n`);
   console.log(`wrote ${join(stateDir, "github-repos.json")} every ${unit.intervalSeconds}s`);
+} else if (id === "agent-desktop") {
+  const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
+  const unit = {
+    version: pins["agent-desktop"],
+    sandbox: {
+      provider: "macos",
+      install: "agent-desktop sandbox install macos",
+      create: "agent-desktop sandbox create base --provider macos --set ipsw=latest",
+      start: "agent-desktop sandbox start base",
+      note: "The first macOS sandbox needs a person to finish Setup Assistant, run guest-setup.sh from the shared folder, and grant Accessibility. The guest network is not isolated.",
+    },
+  };
+  await writeFile(join(stateDir, "agent-desktop.json"), `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${join(stateDir, "agent-desktop.json")} version=${unit.version}`);
+} else if (id === "agent-browser") {
+  const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
+  const unit = {
+    version: pins["agent-browser"],
+    installBrowsers: "agent-browser install",
+    note: "Chrome for Testing is downloaded into the user directory. It is not stored in git.",
+  };
+  await writeFile(join(stateDir, "agent-browser.json"), `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${join(stateDir, "agent-browser.json")} version=${unit.version}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");

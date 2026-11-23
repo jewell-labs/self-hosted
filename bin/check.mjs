@@ -13,7 +13,7 @@ if (!id) {
 }
 
 const root = repoRoot();
-const stateDir = join(root, ".self-hosted");
+const stateDir = process.env.SELFHOST_STATE ?? join(root, ".self-hosted");
 const discovery = buildDiscovery();
 const plugin = discovery.plugins.find((item) => item.id === id);
 if (!plugin?.applicable) {
@@ -199,6 +199,24 @@ if (id === "baseline") {
     process.exit(1);
   }
   console.log(`github-repos ok every ${interval}s`);
+} else if (id === "agent-desktop") {
+  const { readFileSync } = await import("node:fs");
+  const written = JSON.parse(await readFile(join(stateDir, "agent-desktop.json"), "utf8"));
+  const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
+  if (written.version !== pins["agent-desktop"] || !written.sandbox.note.includes("Accessibility")) {
+    console.error("agent-desktop unit does not match catalog/pins.json");
+    process.exit(1);
+  }
+  console.log(`agent-desktop ok ${written.version}`);
+} else if (id === "agent-browser") {
+  const { readFileSync } = await import("node:fs");
+  const written = JSON.parse(await readFile(join(stateDir, "agent-browser.json"), "utf8"));
+  const pins = JSON.parse(readFileSync(join(root, "catalog/pins.json"), "utf8"));
+  if (written.version !== pins["agent-browser"] || written.installBrowsers !== "agent-browser install") {
+    console.error("agent-browser unit does not match catalog/pins.json");
+    process.exit(1);
+  }
+  console.log(`agent-browser ok ${written.version}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("actions-runner remains refused on a public repo");

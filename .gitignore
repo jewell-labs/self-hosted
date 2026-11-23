@@ -1,5 +1,7 @@
 .self-hosted/
 node_modules/
+result
+result-*
 .env
 *.token
 .DS_Store

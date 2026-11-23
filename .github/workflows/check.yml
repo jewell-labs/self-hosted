@@ -18,5 +18,13 @@ jobs:
       - run: node bin/setup.mjs cloudflared && node bin/check.mjs cloudflared
       - run: node bin/setup.mjs sshd && node bin/check.mjs sshd
       - run: node bin/setup.mjs github-repos && node bin/check.mjs github-repos
+      - run: node bin/setup.mjs agent-desktop && node bin/check.mjs agent-desktop
+      - run: node bin/setup.mjs agent-browser && node bin/check.mjs agent-browser
       - name: actions-runner refuses a public repo
         run: if node bin/setup.mjs actions-runner; then exit 1; else exit 0; fi
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v32
+      - run: nix flake check

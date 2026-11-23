@@ -22,13 +22,16 @@ Call `discover` over streamable HTTP `POST /mcp`. The same JSON is printed by `n
 | `cloudflared` | Unit that reads `~/.cloudflared/token` (mode `0600`). The token is not stored here. |
 | `sshd` | Userland `sshd` on `127.0.0.1:2222`, passwords off, Cloudflare Access SSH CA. The CA and keys stay in `~/.ssh/userland`. |
 | `github-repos` | Syncs the repos in `github-repos/config`. `interval_seconds` in that file is how often the LaunchAgent runs. |
+| `agent-desktop` | Installs agent-desktop 1.3.1, including `sandbox`. The first macOS guest needs a person to grant Accessibility. |
+| `agent-browser` | Installs agent-browser 0.43.0. `agent-browser install` downloads Chrome for Testing into the user directory. |
 | `actions-runner` | Refuses to install when the GitHub repo is public. Set `ALLOW_PUBLIC_REPO_RUNNER=1` only if you accept pull-request code on that machine. |
 
-Setup and validate:
+Setup and validate go through Nix. The package versions are in `catalog/pins.json`. See [`nix/README.md`](nix/README.md).
 
 ```sh
-node bin/setup.mjs mcp
-node bin/check.mjs mcp
+nix run .#setup-mcp
+nix run .#check-mcp
+nix flake check
 ```
 
 Weights, tunnel tokens, and runner tokens stay outside this repository.

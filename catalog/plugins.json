@@ -6,64 +6,80 @@
       "summary": "Record the host facts the other plugins just discovered.",
       "proofRequired": true,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs baseline"],
-      "validate": ["node bin/check.mjs baseline"]
+      "setup": ["nix run .#setup-baseline"],
+      "validate": ["nix run .#check-baseline"]
     },
     {
       "id": "mcp",
       "summary": "Serve one MCP tool, discover, on loopback. A non-loopback bind requires Cloudflare Access.",
       "proofRequired": true,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs mcp"],
-      "validate": ["node bin/check.mjs mcp"]
+      "setup": ["nix run .#setup-mcp"],
+      "validate": ["nix run .#check-mcp"]
     },
     {
       "id": "llama",
       "summary": "llama.cpp server tuned for single-stream throughput. One resident model.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs llama"],
-      "validate": ["node bin/check.mjs llama"]
+      "setup": ["nix run .#setup-llama"],
+      "validate": ["nix run .#check-llama"]
     },
     {
       "id": "decision",
       "summary": "Decision-modality models on the llama.cpp router. A second process only when the host has 64GB or more.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs decision"],
-      "validate": ["node bin/check.mjs decision"]
+      "setup": ["nix run .#setup-decision"],
+      "validate": ["nix run .#check-decision"]
     },
     {
       "id": "cloudflared",
       "summary": "Cloudflare Tunnel unit that reads the token from a mode 0600 file, never from git.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs cloudflared"],
-      "validate": ["node bin/check.mjs cloudflared"]
+      "setup": ["nix run .#setup-cloudflared"],
+      "validate": ["nix run .#check-cloudflared"]
     },
     {
       "id": "sshd",
       "summary": "Userland sshd on 127.0.0.1:2222. Passwords off. Trusts a Cloudflare Access SSH CA that stays outside git.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs sshd"],
-      "validate": ["node bin/check.mjs sshd"]
+      "setup": ["nix run .#setup-sshd"],
+      "validate": ["nix run .#check-sshd"]
     },
     {
       "id": "github-repos",
       "summary": "Sync the repos named in github-repos/config. The sync interval is interval_seconds in that file.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs github-repos"],
-      "validate": ["node bin/check.mjs github-repos"]
+      "setup": ["nix run .#setup-github-repos"],
+      "validate": ["nix run .#check-github-repos"]
+    },
+    {
+      "id": "agent-desktop",
+      "summary": "agent-desktop CLI and the macOS sandbox provider. The first guest needs a person to grant Accessibility.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["nix run .#setup-agent-desktop"],
+      "validate": ["nix run .#check-agent-desktop"]
+    },
+    {
+      "id": "agent-browser",
+      "summary": "agent-browser CLI. Chrome for Testing is downloaded into the user directory, not into git.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["nix run .#setup-agent-browser"],
+      "validate": ["nix run .#check-agent-browser"]
     },
     {
       "id": "actions-runner",
       "summary": "GitHub Actions self-hosted runner. Refuses a public repository unless the operator overrides it.",
       "proofRequired": false,
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
-      "setup": ["node bin/setup.mjs actions-runner"],
-      "validate": ["node bin/check.mjs actions-runner"]
+      "setup": ["nix run .#setup-actions-runner"],
+      "validate": ["nix run .#check-actions-runner"]
     }
   ]
 }
