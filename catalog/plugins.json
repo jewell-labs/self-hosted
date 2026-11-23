@@ -42,6 +42,14 @@
       "validate": ["node bin/check.mjs cloudflared"]
     },
     {
+      "id": "sshd",
+      "summary": "Userland sshd on 127.0.0.1:2222. Passwords off. Trusts a Cloudflare Access SSH CA that stays outside git.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["node bin/setup.mjs sshd"],
+      "validate": ["node bin/check.mjs sshd"]
+    },
+    {
       "id": "actions-runner",
       "summary": "GitHub Actions self-hosted runner. Refuses a public repository unless the operator overrides it.",
       "proofRequired": false,

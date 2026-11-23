@@ -162,6 +162,21 @@ if (id === "baseline") {
     process.exit(1);
   }
   console.log("cloudflared ok");
+} else if (id === "sshd") {
+  const written = JSON.parse(await readFile(join(stateDir, "sshd.json"), "utf8"));
+  const home = process.env.HOME ?? "/tmp";
+  const dir = join(home, ".ssh", "userland");
+  if (written.listen !== "127.0.0.1" || written.port !== 2222 || written.passwordAuthentication !== false) {
+    console.error("sshd unit is not loopback, port 2222, passwords off");
+    process.exit(1);
+  }
+  for (const key of ["hostKey", "authorizedPrincipalsFile", "trustedUserCAKeys"]) {
+    if (!written[key].startsWith(`${dir}/`)) {
+      console.error(`sshd ${key} is not under ${dir}`);
+      process.exit(1);
+    }
+  }
+  console.log("sshd ok");
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("actions-runner remains refused on a public repo");

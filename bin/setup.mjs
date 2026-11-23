@@ -69,6 +69,22 @@ if (id === "baseline") {
   };
   await writeFile(join(stateDir, "cloudflared.json"), `${JSON.stringify(unit, null, 2)}\n`);
   console.log(`wrote ${join(stateDir, "cloudflared.json")}`);
+} else if (id === "sshd") {
+  const home = process.env.HOME ?? "/tmp";
+  const dir = join(home, ".ssh", "userland");
+  const unit = {
+    listen: "127.0.0.1",
+    port: 2222,
+    passwordAuthentication: false,
+    kbdInteractiveAuthentication: false,
+    pubkeyAuthentication: true,
+    hostKey: join(dir, "ssh_host_ed25519_key"),
+    authorizedPrincipalsFile: join(dir, "authorized_principals"),
+    trustedUserCAKeys: join(dir, "cf-access-ca.pub"),
+    note: "The CA, host key, and principals stay in this directory. Do not commit them.",
+  };
+  await writeFile(join(stateDir, "sshd.json"), `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${join(stateDir, "sshd.json")}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");

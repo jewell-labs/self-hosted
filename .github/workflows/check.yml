@@ -16,5 +16,6 @@ jobs:
       - run: node bin/setup.mjs llama && node bin/check.mjs llama
       - run: node bin/setup.mjs decision && node bin/check.mjs decision
       - run: node bin/setup.mjs cloudflared && node bin/check.mjs cloudflared
+      - run: node bin/setup.mjs sshd && node bin/check.mjs sshd
       - name: actions-runner refuses a public repo
         run: if node bin/setup.mjs actions-runner; then exit 1; else exit 0; fi

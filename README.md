@@ -20,6 +20,7 @@ Call `discover` over streamable HTTP `POST /mcp`. The same JSON is printed by `n
 | `llama` | Selects a llama.cpp 1.0 argv. On a 24–40GB Apple Silicon Mac that is the M1 Max Studio profile: 8 performance cores, Metal, Flash Attention, q8_0 KV, context 8192, one slot. Linux uses a CPU profile, or CUDA when `SELFHOST_NVIDIA=1`. |
 | `decision` | Models whose output modality includes `decisions`. Under 64GB they stay on the one router. A second process is recorded only at 64GB and above. |
 | `cloudflared` | Unit that reads `~/.cloudflared/token` (mode `0600`). The token is not stored here. |
+| `sshd` | Userland `sshd` on `127.0.0.1:2222`, passwords off, Cloudflare Access SSH CA. The CA and keys stay in `~/.ssh/userland`. |
 | `actions-runner` | Refuses to install when the GitHub repo is public. Set `ALLOW_PUBLIC_REPO_RUNNER=1` only if you accept pull-request code on that machine. |
 
 Setup and validate:
