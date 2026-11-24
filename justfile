@@ -41,11 +41,11 @@ sync:
 prove:
     node proof/prove.mjs
 
-# Remove this account's self-hosted state. Keeps models and agent-desktop.
+# Remove this account's self-hosted state. Keeps models, llm, decision, containers, and agent-desktop.
 nuke:
     node bin/nuke.mjs
 
-# Remove models and agent-desktop too.
+# Remove models, containers, and agent-desktop too.
 nuke-all:
     node bin/nuke.mjs --all
 

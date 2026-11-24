@@ -49,14 +49,17 @@ async function fixture(stuck) {
   await mkdir(join(root, "github/example"), { recursive: true });
   await mkdir(join(root, "ghref"), { recursive: true });
   await mkdir(join(root, "portless"), { recursive: true });
+  await mkdir(join(root, "containers/images"), { recursive: true });
   await mkdir(join(root, "logs"), { recursive: true });
   await mkdir(join(root, "bin"), { recursive: true });
   await mkdir(join(root, "launchd"), { recursive: true });
   await mkdir(agents, { recursive: true });
   await mkdir(join(home, "Library/Logs"), { recursive: true });
+  await mkdir(join(home, "Library/Application Support"), { recursive: true });
   await mkdir(join(home, ".local/bin"), { recursive: true });
   await mkdir(join(home, "local"), { recursive: true });
   await writeFile(join(root, "models/gguf/weight.gguf"), "keep-weight");
+  await writeFile(join(root, "containers/images/node.tar"), "keep-image");
   await writeFile(join(root, "agent-desktop/sandbox/marker"), "keep-sandbox");
   await writeFile(join(root, "state/host.json"), "remove-me");
   await writeFile(join(root, "cloudflared/token"), "not-a-real-token", { mode: 0o600 });
@@ -69,6 +72,7 @@ async function fixture(stuck) {
   await writeFile(join(home, ".local/bin/cloudflared-tunnel"), "#!/bin/sh\nexec cloudflared tunnel --no-autoupdate run --token-file \"$HOME/.cloudflared/token\"\n");
   await symlink(join(root, "bin/ghref"), join(home, ".local/bin/ghref"));
   await symlink(join(root, "models"), join(home, "local/models"));
+  await symlink(join(root, "containers"), join(home, "Library/Application Support/com.apple.container"));
   await symlink(join(root, "agent-desktop"), join(home, ".agent-desktop"));
   await symlink(join(root, "cloudflared"), join(home, ".cloudflared"));
   await symlink(join(root, "logs/ghref.log"), join(home, "Library/Logs/ghref.log"));
@@ -117,6 +121,7 @@ test("just nuke keeps weights and the sandbox and clears launch agents", async (
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /clean/);
     assert.equal(await readFile(join(root, "models/gguf/weight.gguf"), "utf8"), "keep-weight");
+    assert.equal(await readFile(join(root, "containers/images/node.tar"), "utf8"), "keep-image");
     assert.equal(await readFile(join(root, "agent-desktop/sandbox/marker"), "utf8"), "keep-sandbox");
     await assert.rejects(lstat(join(root, "state")));
     await assert.rejects(lstat(join(root, "cloudflared")));
@@ -126,6 +131,7 @@ test("just nuke keeps weights and the sandbox and clears launch agents", async (
     await assert.rejects(lstat(join(root, "logs")));
     await assert.rejects(lstat(join(root, "bin")));
     assert.equal((await lstat(join(home, "local/models"))).isSymbolicLink(), true);
+    assert.equal((await lstat(join(home, "Library/Application Support/com.apple.container"))).isSymbolicLink(), true);
     assert.equal((await lstat(join(home, ".agent-desktop"))).isSymbolicLink(), true);
     await assert.rejects(lstat(join(home, ".cloudflared")));
     await assert.rejects(lstat(join(home, "Library/Logs/ghref.log")));
@@ -134,7 +140,7 @@ test("just nuke keeps weights and the sandbox and clears launch agents", async (
     assert.equal(await readFile(join(home, "important/keep.txt"), "utf8"), "real-directory");
     assert.equal(await readFile(join(home, "outside.txt"), "utf8"), "leave-me");
     assert.equal((await lstat(join(home, "unrelated"))).isSymbolicLink(), true);
-    assert.deepEqual((await readdir(root)).sort(), ["agent-desktop", "models"]);
+    assert.deepEqual((await readdir(root)).sort(), ["agent-desktop", "containers", "models"]);
     const calls = await readFile(log, "utf8");
     for (const label of labels) {
       assert.match(calls, new RegExp(`bootout gui/501/${label}`));
@@ -183,6 +189,7 @@ test("nuke-all removes weights, the sandbox, and their symlinks", async () => {
     assert.equal(result.status, 0, result.stderr);
     await assert.rejects(lstat(join(home, ".self-hosted")));
     await assert.rejects(lstat(join(home, "local/models")));
+    await assert.rejects(lstat(join(home, "Library/Application Support/com.apple.container")));
     await assert.rejects(lstat(join(home, ".agent-desktop")));
     await assert.rejects(lstat(join(home, "Library/LaunchAgents/local.ghref.plist")));
     assert.equal(await readFile(join(home, "outside.txt"), "utf8"), "leave-me");

@@ -7,8 +7,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import { containerEnv } from "../lib/paths.mjs";
 
-const exec = promisify(execFile);
+const execFileAsync = promisify(execFile);
+
+function exec(bin, args, opts = {}) {
+  return execFileAsync(bin, args, { ...opts, env: opts.env ?? containerEnv() });
+}
 const containerBin = "/opt/homebrew/bin/container";
 const repo = new URL("..", import.meta.url).pathname;
 const image = "node:24.11.1-bookworm-slim";

@@ -5,6 +5,7 @@
     "bin",
     "cloudflare",
     "cloudflared",
+    "containers",
     "decision",
     "ghref",
     "github",
@@ -18,7 +19,7 @@
     "sshd",
     "state"
   ],
-  "heavy": ["models", "agent-desktop"],
+  "heavy": ["models", "agent-desktop", "containers"],
   "refuseNames": ["node_modules", ".pnpm-store"],
   "weights": "models/gguf",
   "usageLog": "logs/models.jsonl",

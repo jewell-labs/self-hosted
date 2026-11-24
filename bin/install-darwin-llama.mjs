@@ -2,7 +2,8 @@
 // and does not write outside the home. Weights stay in the shared library.
 // Usage: node bin/install-darwin-llama.mjs
 import { join } from "node:path";
-import { JailError, realInsideSync, writeSyncInside } from "../lib/jail.mjs";
+import { JailError, realInsideSync } from "../lib/jail.mjs";
+import { saveAgent } from "../lib/launchd.mjs";
 import { selectLlmProfile } from "../lib/profiles.mjs";
 import { readHost } from "../lib/host.mjs";
 import { homeDir, layout } from "../lib/paths.mjs";
@@ -29,7 +30,6 @@ try {
 const args = [bin, ...profile.args, "--models-dir", modelsDir];
 const label = "com.jewell-labs.llama-server";
 const log = join(layout().logs, "jewell-labs-llama-server.log");
-const plistPath = join(layout().launchd, `${label}.plist`);
 const xmlArgs = args.map((arg) => `    <string>${arg.replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</string>`).join("\n");
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -52,8 +52,10 @@ ${xmlArgs}
 </dict>
 </plist>
 `;
+let plistPath;
 try {
-  writeSyncInside(root, plistPath, plist);
+  realInsideSync(root, join(layout().launchd, "agents", `${label}.plist`));
+  plistPath = saveAgent(process.env, label, plist);
 } catch (error) {
   console.error(error instanceof JailError ? error.message : error.message);
   process.exit(1);

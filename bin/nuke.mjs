@@ -1,5 +1,6 @@
 // Remove this account's self-hosted install.
-// Default keeps models (GGUF weights, including decision models) and agent-desktop.
+// Default keeps the GGUF library, Apple container images, the llm and decision
+// server homes, and the agent-desktop sandbox.
 // --all removes those too.
 // SELFHOST_HOME, SELFHOST_LAUNCHCTL, and SELFHOST_LAUNCHD_DOMAIN are for tests.
 import { execFileSync } from "node:child_process";

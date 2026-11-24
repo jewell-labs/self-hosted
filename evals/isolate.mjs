@@ -2,6 +2,7 @@
 import { execFile as execFileCb } from "node:child_process";
 import net from "node:net";
 import { promisify } from "node:util";
+import { containerEnv } from "../lib/paths.mjs";
 
 const execFileAsync = promisify(execFileCb);
 
@@ -115,7 +116,7 @@ function missed(ids, body) {
 
 async function run(execImpl, bin, args, timeout) {
   try {
-    return await execImpl(bin, args, { timeout, encoding: "utf8", maxBuffer: 1024 * 1024 });
+    return await execImpl(bin, args, { timeout, encoding: "utf8", maxBuffer: 1024 * 1024, env: containerEnv() });
   } catch (error) {
     return { stdout: error?.stdout ?? "", stderr: error?.stderr ?? "", failed: true };
   }

@@ -7,6 +7,7 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { containerEnv } from "../lib/paths.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const llamaUrl = process.env.LLM_URL ?? process.env.LLAMA_URL ?? "http://127.0.0.1:8080";
@@ -21,7 +22,7 @@ const name = "selfhost-proof";
 
 function run(cmd, args, opts = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"], ...opts });
+    const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"], env: containerEnv(), ...opts });
     let out = "";
     let err = "";
     child.stdout.on("data", (chunk) => {

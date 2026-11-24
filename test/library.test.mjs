@@ -7,10 +7,13 @@ import { admitDownload, downloadWeight, huggingfaceUrl } from "../lib/models.mjs
 import { loadHomePolicy, realInside, scanHome, writeInside } from "../lib/jail.mjs";
 import { callTool } from "../lib/mesh.mjs";
 
-test("github and ghref are allowed home directories", async () => {
+test("github, ghref, and containers are allowed home directories", async () => {
   const policy = await loadHomePolicy();
   assert.equal(policy.allowed.includes("github"), true);
   assert.equal(policy.allowed.includes("ghref"), true);
+  assert.equal(policy.allowed.includes("containers"), true);
+  assert.equal(policy.heavy.includes("containers"), true);
+  assert.equal(policy.heavy.includes("models"), true);
 });
 
 test("downloads stay inside the reserve and the home", async () => {

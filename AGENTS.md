@@ -14,7 +14,7 @@ The `cloudflare` plugin owns Access, the shared service token, and the log. One 
 
 ## Do not
 
-- Commit a token, key, registration token, or Access private key. Weights and the agent-desktop sandbox stay in `~/.self-hosted`. `just nuke` removes the rest and checks that the LaunchAgents are gone.
+- Commit a token, key, registration token, or Access private key. Weights, Apple container images, and the agent-desktop sandbox stay in `~/.self-hosted`. `just nuke` removes the rest and checks that the LaunchAgents are gone.
 - Install `actions-runner` on a public repository. The setup exits 1 unless `ALLOW_PUBLIC_REPO_RUNNER=1`.
 - Copy a GGUF into a second directory. `llm` and `decision` both read `~/.self-hosted/models/gguf`. The decision router stays its own process.
 - Write a self-hosted file outside `~/.self-hosted`. `home/policy.json` is the allowed list, the disk reserve, and the probe text.

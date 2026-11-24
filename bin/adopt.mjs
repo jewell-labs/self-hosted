@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, writeFileSync } from "node:fs";
 import { rename, symlink } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
+import { installLaunchAgents, recordLaunchAgents } from "../lib/launchd.mjs";
 import { MANAGED_LABELS, layout, userHome } from "../lib/paths.mjs";
 
 const user = userHome();
@@ -17,6 +18,15 @@ function die(message) {
 
 if (root === resolve(user) || root === "/" || !root.startsWith(`${resolve(user)}${sep}`)) {
   die(`refusing to adopt into ${root}`);
+}
+
+if (process.argv.includes("--install-agents")) {
+  try {
+    for (const path of installLaunchAgents()) console.log(`installed ${path}`);
+  } catch (error) {
+    die(error.message ?? String(error));
+  }
+  process.exit(0);
 }
 
 for (const lock of [join(paths.legacy.ghref, ".lock"), join(paths.ghref, ".lock")]) {
@@ -34,6 +44,7 @@ const moves = [
   [paths.legacy.ghref, paths.ghref],
   [paths.legacy.portless, paths.portless],
   [paths.legacy.state, paths.state],
+  [paths.legacy.containers, paths.containers],
 ];
 
 function sameLink(src, dest) {
@@ -47,7 +58,7 @@ function sameLink(src, dest) {
 
 const links = [];
 for (const [src, dest] of moves) {
-  if (!existsSync(src) && !existsSync(dest)) continue;
+  if (!existsSync(src)) continue;
   if (sameLink(src, dest)) {
     links.push({ path: src, target: dest });
     console.log(`already ${src}`);
@@ -69,7 +80,7 @@ for (const [src, dest] of moves) {
   console.log(`moved ${src}`);
 }
 
-for (const dir of [paths.logs, paths.bin, paths.launchd, paths.state, paths.gguf]) {
+for (const dir of [paths.logs, paths.bin, paths.launchd, paths.state, paths.gguf, paths.containers]) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 }
 
@@ -81,6 +92,6 @@ const found = existsSync(agents)
     .filter((name) => MANAGED_LABELS.includes(name) || name.startsWith("com.jewell-labs.") || name.startsWith("com.dpi.llama"))
   : [];
 const labels = [...new Set([...MANAGED_LABELS, ...found])];
-writeFileSync(paths.labels, `${JSON.stringify({ schema: "jewell-labs.self-hosted.launchd.v1", labels }, null, 2)}\n`);
+recordLaunchAgents(process.env, labels);
 writeFileSync(paths.links, `${JSON.stringify({ schema: "jewell-labs.self-hosted.links.v1", links }, null, 2)}\n`);
 console.log(`home ${root}`);

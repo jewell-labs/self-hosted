@@ -24,13 +24,14 @@ done < "$CONFIG"
 [ -n "$interval" ] || { echo "ghref: config has no interval_seconds" >&2; exit 1; }
 [ "${#repos[@]}" -gt 0 ] || { echo "ghref: config has no repos" >&2; exit 1; }
 
-REF=${GHREF_REF:-$HOME/.self-hosted/github}
-STORE=${GHREF_STORE:-$HOME/.self-hosted/ghref}
+HOST=${SELFHOST_HOME:-$HOME/.self-hosted}
+REF=${GHREF_REF:-$HOST/github}
+STORE=${GHREF_STORE:-$HOST/ghref}
 BASE=${GHREF_BASE:-https://github.com/}
 LABEL=local.ghref
 PLIST=$HOME/Library/LaunchAgents/$LABEL.plist
-LOG=$HOME/.self-hosted/logs/ghref.log
-BIN=${GHREF_BIN:-$HOME/.self-hosted/bin/ghref}
+LOG=$HOST/logs/ghref.log
+BIN=${GHREF_BIN:-$HOST/bin/ghref}
 
 warn(){ echo "WARN $*"; }
 die(){ echo "ghref: $*" >&2; exit 1; }
@@ -111,7 +112,8 @@ case ${1:-sync} in
     echo "ready: $dir" ;;
   install)
     write_plist
-    mkdir -p "${BIN%/*}"
+    mkdir -p "$HOST/launchd/agents" "${BIN%/*}"
+    cp "$PLIST" "$HOST/launchd/agents/$LABEL.plist"
     ln -sfn "$ROOT/ghref" "$BIN"
     launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
     launchctl bootstrap "gui/$(id -u)" "$PLIST"
