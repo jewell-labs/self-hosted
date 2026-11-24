@@ -4,22 +4,125 @@ import { homedir } from "node:os";
 import { join, sep } from "node:path";
 import { promisify } from "node:util";
 import { repoRoot } from "../lib/discover.mjs";
-import { layout } from "../lib/paths.mjs";
+import { realInside, writeInside } from "../lib/jail.mjs";
+import { homeDir, layout } from "../lib/paths.mjs";
 import { loadDescriptors } from "./harnesses.mjs";
 import { repoName, workPath } from "./names.mjs";
 
 const execFileAsync = promisify(execFile);
 export const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+export const PROJECTS_SCHEMA = "jewell-labs.self-hosted.projects.v1";
+const REF = /^[A-Za-z0-9._/-]+$/;
 const HARNESS_BIN = new Set(["grok", "claude", "codex", "pi"]);
 
 export function projectLines(text) {
   return text.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#") && !line.startsWith("interval_seconds="));
 }
 
+function sameProject(left, right) {
+  return left.toLowerCase() === right.toLowerCase();
+}
+
+function projectsPath(env) {
+  return join(env.SELFHOST_STATE ?? layout(env).state, "projects.json");
+}
+
+export function chooseProject(answer, projects) {
+  const text = String(answer ?? "").trim();
+  if (/^\d+$/.test(text)) {
+    const project = projects[Number(text) - 1];
+    if (!project) throw new Error("project number is not in the list");
+    return { project, add: false };
+  }
+  repoName(text);
+  const found = projects.find((item) => sameProject(item, text));
+  if (found) return { project: found, add: false };
+  return { project: text, add: true };
+}
+
+async function readStateProjects(env) {
+  let text = "";
+  try {
+    text = await readFile(await realInside(homeDir(env), projectsPath(env)), "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  let doc;
+  try {
+    doc = JSON.parse(text);
+  } catch {
+    throw new Error("projects state");
+  }
+  if (!doc || doc.schema !== PROJECTS_SCHEMA || !Array.isArray(doc.projects)) throw new Error("projects state");
+  const seen = new Set();
+  const projects = [];
+  for (const item of doc.projects) {
+    if (!item || typeof item.name !== "string" || typeof item.branch !== "string") throw new Error("projects state");
+    repoName(item.name);
+    if (!REF.test(item.branch) || seen.has(item.name.toLowerCase())) throw new Error("projects state");
+    seen.add(item.name.toLowerCase());
+    projects.push({ name: item.name, branch: item.branch });
+  }
+  return projects;
+}
+
+async function writeStateProjects(env, projects) {
+  const body = `${JSON.stringify({ schema: PROJECTS_SCHEMA, projects }, null, 2)}\n`;
+  await writeInside(homeDir(env), projectsPath(env), body);
+}
+
 export async function readProjects(env = process.env) {
   const root = env.SELFHOST_ROOT ?? repoRoot();
   const text = await readFile(join(root, "github-repos/config"), "utf8");
-  return projectLines(text);
+  const names = projectLines(text);
+  for (const item of await readStateProjects(env)) {
+    if (!names.some((name) => sameProject(name, item.name))) names.push(item.name);
+  }
+  return names;
+}
+
+export async function projectBranch(project, env = process.env) {
+  const found = (await readStateProjects(env)).find((item) => sameProject(item.name, project));
+  return found?.branch;
+}
+
+async function gitHead(remote) {
+  const { stdout } = await execFileAsync("git", ["ls-remote", "--symref", remote, "HEAD"], {
+    timeout: 30_000,
+    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+  });
+  return stdout;
+}
+
+export async function inspectProject(project, run = gitHead) {
+  repoName(project);
+  const remote = `https://github.com/${project}.git`;
+  let text = "";
+  try {
+    text = await run(remote);
+  } catch {
+    throw new Error("project is not reachable");
+  }
+  if (typeof text !== "string") throw new Error("project is not reachable");
+  let branch = "";
+  for (const line of text.split("\n")) {
+    const match = line.match(/^ref: refs\/heads\/([A-Za-z0-9._/-]+)\tHEAD$/);
+    if (match) branch = match[1];
+  }
+  if (!REF.test(branch)) throw new Error("project has no default branch");
+  return { project, remote, branch };
+}
+
+export async function ensureProject(project, env = process.env, inspect = inspectProject) {
+  const known = await readProjects(env);
+  const found = known.find((item) => sameProject(item, project));
+  if (found) return { name: found, branch: (await projectBranch(found, env)) ?? "main", added: false };
+  const info = await inspect(project);
+  const state = await readStateProjects(env);
+  state.push({ name: info.project, branch: info.branch });
+  await writeStateProjects(env, state);
+  return { name: info.project, branch: info.branch, added: true };
 }
 
 export function workRoot(env = process.env) {
@@ -38,13 +141,14 @@ async function gitClone(spec) {
 
 export async function createWork(input, env = process.env, clone = gitClone) {
   const projects = await readProjects(env);
-  if (!projects.includes(input.project)) throw new Error("project is not in github-repos/config");
+  const project = projects.find((item) => sameProject(item, input.project ?? ""));
+  if (!project) throw new Error("project is not in the project list");
   const harnesses = await loadDescriptors(env.SELFHOST_ROOT ?? repoRoot());
   if (!harnesses.some((item) => item.id === input.harness)) throw new Error("unknown harness");
-  const branch = input.branch ?? "main";
-  if (!/^[A-Za-z0-9._/-]+$/.test(branch)) throw new Error("branch is not a ref name");
+  const branch = input.branch ?? (await projectBranch(project, env)) ?? "main";
+  if (!REF.test(branch)) throw new Error("branch is not a ref name");
   const root = workRoot(env);
-  const dir = workPath(root, input);
+  const dir = workPath(root, { ...input, project });
   try {
     await readdir(dir);
     throw new Error("work directory already exists");
@@ -53,7 +157,7 @@ export async function createWork(input, env = process.env, clone = gitClone) {
     if (error.code !== "ENOENT") throw error;
   }
   await mkdir(root, { recursive: true });
-  const remote = `https://github.com/${input.project}.git`;
+  const remote = `https://github.com/${project}.git`;
   let sha = "";
   try {
     sha = await clone({ remote, branch, dir });
@@ -62,7 +166,7 @@ export async function createWork(input, env = process.env, clone = gitClone) {
     throw error;
   }
   const meta = {
-    project: input.project,
+    project,
     remote,
     branch,
     harness: input.harness,
@@ -72,7 +176,7 @@ export async function createWork(input, env = process.env, clone = gitClone) {
     head: sha,
   };
   await writeFile(join(dir, "meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
-  return { ...meta, dir, name: repoName(input.project) };
+  return { ...meta, dir, name: repoName(project) };
 }
 
 export async function listWork(env = process.env) {

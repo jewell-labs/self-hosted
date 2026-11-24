@@ -9,7 +9,7 @@ import { createMcpServer } from "../mcp/server.mjs";
 import { buildArgv } from "../work/harness.mjs";
 import { loadDescriptors, parseDescriptor, probeOne } from "../work/harnesses.mjs";
 import { label, repoName, workPath } from "../work/names.mjs";
-import { cleanWork, createWork } from "../work/store.mjs";
+import { chooseProject, cleanWork, createWork, ensureProject, inspectProject, PROJECTS_SCHEMA } from "../work/store.mjs";
 import { due } from "../work/routines.mjs";
 
 function env(extra = {}) {
@@ -70,7 +70,7 @@ test("create stays under the work root and clean skips young and live directorie
       harness: "grok",
       domain: "mesh",
       slug: "one",
-    }, base, async () => "sha"), /not in github-repos/);
+    }, base, async () => "sha"), /not in the project list/);
     const created = await createWork({
       project: "jewell-labs/self-hosted",
       harness: "grok",
@@ -105,6 +105,60 @@ test("create stays under the work root and clean skips young and live directorie
   } finally {
     await rm(root, { recursive: true, force: true });
     await rm(home, { recursive: true, force: true });
+  }
+});
+
+test("an owner or username repo is checked before it joins the project list", async () => {
+  const home = await mkdtemp(join(tmpdir(), "work-projects-"));
+  const root = await mkdtemp(join(tmpdir(), "work-projects-dir-"));
+  const base = env({ SELFHOST_WORK_ROOT: root, HOME: home, SELFHOST_HOME: home });
+  try {
+    assert.deepEqual(chooseProject("1", ["jewell-labs/self-hosted"]), { project: "jewell-labs/self-hosted", add: false });
+    assert.deepEqual(chooseProject("octo/widget", ["jewell-labs/self-hosted"]), { project: "octo/widget", add: true });
+    assert.equal(chooseProject("Jewell-Labs/Self-Hosted", ["jewell-labs/self-hosted"]).add, false);
+    assert.throws(() => chooseProject("not a repo", []), /org\/name/);
+    assert.throws(() => chooseProject("9", ["jewell-labs/self-hosted"]), /not in the list/);
+    const info = await inspectProject("octo/widget", async (remote) => {
+      assert.equal(remote, "https://github.com/octo/widget.git");
+      return "ref: refs/heads/develop\tHEAD\nabc\tHEAD\n";
+    });
+    assert.equal(info.branch, "develop");
+    await assert.rejects(() => inspectProject("octo/widget", async () => "abc\tHEAD\n"), /default branch/);
+    await assert.rejects(() => inspectProject("octo/widget", async () => { throw new Error("down"); }), /reachable/);
+    await assert.rejects(() => ensureProject("octo/missing", base, async () => { throw new Error("project is not reachable"); }), /reachable/);
+    let checks = 0;
+    const saved = await ensureProject("octo/widget", base, async (project) => {
+      checks += 1;
+      assert.equal(project, "octo/widget");
+      return { project, remote: "https://github.com/octo/widget.git", branch: "develop" };
+    });
+    assert.equal(saved.added, true);
+    const again = await ensureProject("Octo/Widget", base, async () => { throw new Error("checked twice"); });
+    assert.equal(checks, 1);
+    assert.equal(again.added, false);
+    assert.equal(again.name, "octo/widget");
+    assert.equal(again.branch, "develop");
+    const recorded = JSON.parse(await readFile(join(home, "state", "projects.json"), "utf8"));
+    assert.equal(recorded.schema, PROJECTS_SCHEMA);
+    assert.deepEqual(recorded.projects, [{ name: "octo/widget", branch: "develop" }]);
+    const known = await ensureProject("jewell-labs/self-hosted", base, async () => { throw new Error("config project was checked"); });
+    assert.equal(known.added, false);
+    const created = await createWork({
+      project: "octo/widget",
+      harness: "grok",
+      domain: "mesh",
+      slug: "one",
+    }, base, async (spec) => {
+      assert.equal(spec.branch, "develop");
+      assert.equal(spec.remote, "https://github.com/octo/widget.git");
+      await mkdir(spec.dir, { recursive: true });
+      return "def456";
+    });
+    assert.equal(created.project, "octo/widget");
+    assert.equal(created.branch, "develop");
+  } finally {
+    await rm(home, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true });
   }
 });
 

@@ -5,7 +5,7 @@ import { stdin, stdout } from "node:process";
 import { sep } from "node:path";
 import { repoRoot } from "../lib/discover.mjs";
 import { loadDescriptors } from "./harnesses.mjs";
-import { createWork, listWork, workRoot } from "./store.mjs";
+import { chooseProject, createWork, ensureProject, listWork, workRoot } from "./store.mjs";
 
 const harness = process.argv[2];
 const userArgs = process.argv.slice(3);
@@ -43,7 +43,7 @@ if (process.env.SELFHOST_WORK || insideWork(process.cwd())) {
 let project = process.env.SELFHOST_PROJECT ?? "";
 let domain = process.env.SELFHOST_DOMAIN ?? "";
 let slug = process.env.SELFHOST_SLUG ?? "";
-const branch = process.env.SELFHOST_BRANCH || undefined;
+let branch = process.env.SELFHOST_BRANCH || undefined;
 
 if (!project || !domain || !slug) {
   if (!stdin.isTTY) {
@@ -55,8 +55,29 @@ if (!project || !domain || !slug) {
   try {
     if (!project) {
       listed.projects.forEach((item, index) => console.log(`${index + 1} ${item}`));
-      const answer = await rl.question("project number: ");
-      project = listed.projects[Number(answer) - 1] ?? "";
+      console.log("owner/repo adds a project");
+      while (!project) {
+        const answer = await rl.question("project number or owner/repo: ");
+        let choice;
+        try {
+          choice = chooseProject(answer, listed.projects);
+        } catch (error) {
+          console.error(error instanceof Error ? error.message : String(error));
+          continue;
+        }
+        if (!choice.add) {
+          project = choice.project;
+          break;
+        }
+        try {
+          const saved = await ensureProject(choice.project);
+          project = saved.name;
+          if (!branch) branch = saved.branch;
+          if (saved.added) console.error(`added ${saved.name}`);
+        } catch (error) {
+          console.error(error instanceof Error ? error.message : String(error));
+        }
+      }
     }
     if (!domain) domain = (await rl.question("domain: ")).trim();
     if (!slug) slug = (await rl.question("slug: ")).trim();
@@ -66,6 +87,18 @@ if (!project || !domain || !slug) {
   if (!project || !domain || !slug) {
     console.error("project, domain, and slug are required");
     process.exit(2);
+  }
+}
+
+if (project) {
+  try {
+    const saved = await ensureProject(project);
+    project = saved.name;
+    if (!branch) branch = saved.branch;
+    if (saved.added) console.error(`added ${saved.name}`);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
   }
 }
 
