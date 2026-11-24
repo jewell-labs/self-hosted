@@ -86,17 +86,30 @@ function call(id, name, args) {
   return { jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args } };
 }
 
-test("a webhook is the shared schema, with tool and ci only", async () => {
+test("a webhook declares the events that plugin publishes", async () => {
   assert.throws(() => validateWebhook({
     schema: "jewell-labs.self-hosted.event.v1",
     plugin: "llm",
     events: [{ type: "progress" }, { type: "workflow", name: "ci" }],
   }, "llm"), /tool/);
+  assert.throws(() => validateWebhook({
+    schema: "jewell-labs.self-hosted.event.v1",
+    plugin: "llm",
+    events: [{ type: "tool" }, { type: "workflow", name: "ci" }, { type: "harness" }],
+  }, "llm"), /event/);
+  assert.throws(() => validateWebhook({
+    schema: "jewell-labs.self-hosted.event.v1",
+    plugin: "work",
+    events: [{ type: "tool" }, { type: "workflow", name: "clean" }],
+  }, "work"), /event/);
   const hooks = await loadWebhooks();
+  const byId = Object.fromEntries(hooks.map((hook) => [hook.plugin, hook.events]));
+  assert.deepEqual(byId.work, [{ type: "tool" }, { type: "workflow", name: "clean" }, { type: "harness" }]);
+  assert.deepEqual(byId.evals, [{ type: "tool" }, { type: "workflow", name: "ci" }, { type: "eval" }]);
   assert.equal(hooks.some((hook) => hook.plugin === "llm"), true);
   assert.equal(hooks.some((hook) => hook.plugin === "decision"), true);
   assert.equal(hooks.some((hook) => hook.plugin === "mesh"), true);
-  assert.equal(hooks.every((hook) => hook.events.length === 2), true);
+  assert.equal(hooks.filter((hook) => hook.plugin !== "work" && hook.plugin !== "evals").every((hook) => hook.events.length === 2), true);
   assert.throws(() => parseFilter(new URLSearchParams("type=progress"), ""), /event filter/);
   const bus = createBus();
   const seen = [];

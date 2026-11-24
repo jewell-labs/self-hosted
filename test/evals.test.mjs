@@ -267,7 +267,7 @@ test("a missing container is an error and a present one is the only runner", asy
 
 test("eval events are on the main stream", async () => {
   const definition = (await loadWebhooks(repo)).find((hook) => hook.plugin === "evals");
-  assert.deepEqual(definition.events, [{ type: "tool" }, { type: "workflow", name: "ci" }]);
+  assert.deepEqual(definition.events, [{ type: "tool" }, { type: "workflow", name: "ci" }, { type: "eval" }]);
   assert.throws(() => normalizeEvent({ plugin: "evals", type: "tool", name: "evals.run", detail: "ok", body: "ok" }, "1"), /event body/);
   const event = normalizeEvent({ plugin: "evals", type: "eval", name: "llm-hierarchy", detail: "ok", body: "ok" }, "2");
   assert.equal(event.type, "eval");

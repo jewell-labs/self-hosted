@@ -8,6 +8,9 @@
     {
       "type": "workflow",
       "name": "clean"
+    },
+    {
+      "type": "harness"
     }
   ]
 }

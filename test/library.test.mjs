@@ -4,8 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { admitDownload, downloadWeight, huggingfaceUrl } from "../lib/models.mjs";
-import { realInside, scanHome, writeInside } from "../lib/jail.mjs";
+import { loadHomePolicy, realInside, scanHome, writeInside } from "../lib/jail.mjs";
 import { callTool } from "../lib/mesh.mjs";
+
+test("github and ghref are allowed home directories", async () => {
+  const policy = await loadHomePolicy();
+  assert.equal(policy.allowed.includes("github"), true);
+  assert.equal(policy.allowed.includes("ghref"), true);
+});
 
 test("downloads stay inside the reserve and the home", async () => {
   assert.equal(admitDownload({ freeBytes: 30, sizeBytes: 20, reserveBytes: 20, maxBytes: 40 }), "reserve");
