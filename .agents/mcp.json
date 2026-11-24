@@ -60,13 +60,13 @@
     },
     {
       "name": "events.workflow",
-      "description": "Record a ci workflow event for one plugin. detail is started, ok, or error. The event stores no other text.",
+      "description": "Record a ci or clean workflow event for one plugin. detail is started, ok, or error. The event stores no other text.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
         "properties": {
           "plugin": { "type": "string" },
-          "name": { "type": "string", "enum": ["ci"] },
+          "name": { "type": "string", "enum": ["ci", "clean"] },
           "detail": { "type": "string", "enum": ["started", "ok", "error"] }
         },
         "required": ["plugin", "name", "detail"],

@@ -12,6 +12,7 @@ let
     "agent-browser"
     "simulators"
     "portless"
+    "work"
   ];
 in
 runCommand "selfhost-plugins-check"
@@ -34,6 +35,8 @@ runCommand "selfhost-plugins-check"
     grep -q 'PasswordAuthentication no' ${packages.sshd}/share/selfhost/sshd_config.template
     grep -q 'ListenAddress 127.0.0.1' ${packages.sshd}/share/selfhost/sshd_config.template
     grep -q 'interval_seconds=' ${packages.github-repos}/share/selfhost/config
+    test -x ${packages.work}/bin/grok
+    grep -q wrap.mjs ${packages.work}/bin/grok
     if grep -q 'REPOS=' ${packages.github-repos}/share/selfhost/ghref; then
       echo "ghref hardcodes a repo list" >&2
       exit 1

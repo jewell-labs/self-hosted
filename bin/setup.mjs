@@ -137,6 +137,13 @@ if (id === "baseline") {
   }
   const unit = await writePortlessState(stateDir);
   console.log(`wrote ${join(stateDir, "portless.json")} version=${unit.version}`);
+} else if (id === "work") {
+  const { mkdir } = await import("node:fs/promises");
+  const { installWrappers } = await import("../work/install.mjs");
+  await mkdir(layout().work, { recursive: true });
+  const bins = await installWrappers();
+  console.log(`work root ${layout().work}`);
+  console.log(`wrappers ${bins.join(",")}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");

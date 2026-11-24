@@ -18,7 +18,13 @@ let
     "actions-runner"
     "simulators"
     "portless"
+    "work"
   ];
+  harnessIds = map (name: lib.removeSuffix ".json" name) (
+    lib.sort builtins.lessThan (
+      builtins.attrNames (lib.filterAttrs (name: _: lib.hasSuffix ".json" name) (builtins.readDir ../work/harnesses))
+    )
+  );
   catalogIds = map (pluginSpec: pluginSpec.id) catalog.plugins;
   packages = {
     baseline = plugin {
@@ -45,6 +51,21 @@ let
     portless = plugin {
       id = "portless";
       summary = "One Portless proxy for local web apps, agent-browser, agent-desktop guests, and simulators.";
+    };
+    work = plugin {
+      id = "work";
+      summary = "Short-lived clones under ~/.self-hosted/work. Each coding harness is a descriptor that is probed and then streamed.";
+      installPhase = lib.concatMapStrings (name:
+        let
+          script = pkgs.writeShellScript "selfhost-wrap-${name}" ''
+            here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+            PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$here" | paste -sd: -) || true
+            exec ${pkgs.nodejs}/bin/node ${self}/work/wrap.mjs ${name} "$@"
+          '';
+        in ''
+          cp ${script} $out/bin/${name}
+          chmod 755 $out/bin/${name}
+        '') harnessIds;
     };
   };
 in

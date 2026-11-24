@@ -96,6 +96,14 @@
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
       "setup": ["nix run .#setup-portless"],
       "validate": ["nix run .#check-portless"]
+    },
+    {
+      "id": "work",
+      "summary": "Short-lived clones under ~/.self-hosted/work. Each coding harness is a descriptor that is probed and then streamed.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["nix run .#setup-work"],
+      "validate": ["nix run .#check-work"]
     }
   ]
 }

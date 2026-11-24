@@ -1,0 +1,6 @@
+{
+  "id": "clean-work",
+  "every": "1d",
+  "workflow": "clean",
+  "plugin": "work"
+}

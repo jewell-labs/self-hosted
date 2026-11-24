@@ -1,0 +1,10 @@
+{
+  "id": "pi",
+  "command": "pi",
+  "probe": ["--help"],
+  "expect": "pi",
+  "cli": ["-p", "{prompt}", "--cwd", "{cwd}"],
+  "dirFlag": "--cwd",
+  "acpCommand": "npx",
+  "acp": ["--no-install", "pi-acp"]
+}

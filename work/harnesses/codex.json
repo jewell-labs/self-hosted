@@ -1,0 +1,12 @@
+{
+  "id": "codex",
+  "command": "codex",
+  "probe": ["exec", "--help"],
+  "expect": "--json",
+  "cli": ["exec", "--json", "-C", "{cwd}", "{prompt}"],
+  "model": ["-m", "{model}"],
+  "argsBeforePrompt": true,
+  "dirFlag": "-C",
+  "acpCommand": "npx",
+  "acp": ["--no-install", "@agentclientprotocol/codex-acp"]
+}

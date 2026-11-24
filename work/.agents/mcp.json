@@ -1,0 +1,80 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "work.setup",
+      "description": "Record that work directories live under ~/.self-hosted/work. Does not clone.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "work" }
+    },
+    {
+      "name": "work.check",
+      "description": "Check the work routine and that project names come from github-repos/config.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "work" }
+    },
+    {
+      "name": "work.list",
+      "description": "List projects from github-repos/config and the live work directories.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "work-list", "plugin": "work" }
+    },
+    {
+      "name": "work.create",
+      "description": "Clone one configured project into a new work directory. Default branch is main.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string" },
+          "harness": { "type": "string" },
+          "domain": { "type": "string" },
+          "slug": { "type": "string" },
+          "branch": { "type": "string" }
+        },
+        "required": ["project", "harness", "domain", "slug"],
+        "additionalProperties": false
+      },
+      "run": { "type": "work-create", "plugin": "work" }
+    },
+    {
+      "name": "work.clean",
+      "description": "Remove work directories older than 3 days whose harness is not running.",
+      "destructive": true,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "work-clean", "plugin": "work" }
+    },
+    {
+      "name": "harness.list",
+      "description": "Probe every harness descriptor under work/harnesses. A new json file is a new harness.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "harness-list", "plugin": "work" }
+    },
+    {
+      "name": "harness.run",
+      "description": "Run grok, claude, codex, or pi in a work directory. transport is cli or acp. env and args are structured.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "harness": { "type": "string" },
+          "transport": { "type": "string" },
+          "cwd": { "type": "string" },
+          "prompt": { "type": "string" },
+          "model": { "type": "string" },
+          "env": { "type": "object" },
+          "agents": {},
+          "args": { "type": "array" },
+          "capabilities": { "type": "object" }
+        },
+        "required": ["harness", "transport", "cwd", "prompt"],
+        "additionalProperties": false
+      },
+      "run": { "type": "harness-run", "plugin": "work" }
+    }
+  ]
+}

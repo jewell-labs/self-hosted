@@ -12,6 +12,7 @@ const labels = [
   "com.jewell-labs.cloudflared",
   "com.jewell-labs.cloudflared-studio",
   "com.jewell-labs.userland-sshd",
+  "com.jewell-labs.routines",
   "local.ghref",
   "com.dpi.llama-server",
 ];

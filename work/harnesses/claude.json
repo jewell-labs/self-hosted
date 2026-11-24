@@ -1,0 +1,12 @@
+{
+  "id": "claude",
+  "command": "claude",
+  "probe": ["--help"],
+  "expect": "--output-format",
+  "cli": ["-p", "{prompt}", "--add-dir", "{cwd}", "--output-format", "stream-json", "--verbose"],
+  "model": ["--model", "{model}"],
+  "agents": ["--agents", "{agents}"],
+  "dirFlag": "--add-dir",
+  "acpCommand": "npx",
+  "acp": ["--no-install", "@agentclientprotocol/claude-agent-acp"]
+}

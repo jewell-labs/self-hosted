@@ -1,0 +1,11 @@
+{
+  "id": "grok",
+  "command": "grok",
+  "probe": ["--help"],
+  "expect": "--output-format",
+  "cli": ["--cwd", "{cwd}", "-p", "{prompt}", "--output-format", "streaming-json"],
+  "model": ["--model", "{model}"],
+  "agents": ["--agents", "{agents}"],
+  "dirFlag": "--cwd",
+  "acp": ["agent", "stdio"]
+}

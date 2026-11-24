@@ -98,13 +98,16 @@ export function createMcpServer(env = process.env) {
         }
         throw error;
       }
-      const subscription = bus.subscribe(filter, (event) => {
+      let dropHarness = false;
+      const writeEvent = (event) => {
         if (res.destroyed || res.writableEnded) {
           subscription.close();
           return;
         }
-        res.write(formatSse(event));
-      });
+        if (dropHarness && event.type === "harness") return;
+        if (!res.write(formatSse(event))) dropHarness = true;
+      };
+      const subscription = bus.subscribe(filter, writeEvent);
       res.writeHead(200, {
         "content-type": "text/event-stream; charset=utf-8",
         "cache-control": "no-store",
@@ -113,7 +116,10 @@ export function createMcpServer(env = process.env) {
       res.flushHeaders();
       res.socket?.setNoDelay(true);
       res.write(": open\n\n");
-      for (const event of subscription.replay) res.write(formatSse(event));
+      for (const event of subscription.replay) writeEvent(event);
+      res.on("drain", () => {
+        dropHarness = false;
+      });
       res.on("close", () => subscription.close());
       return;
     }
