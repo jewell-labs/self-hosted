@@ -23,6 +23,7 @@ jobs:
       - run: node bin/setup.mjs simulators && node bin/check.mjs simulators
       - run: node bin/setup.mjs portless && node bin/check.mjs portless
       - run: node bin/setup.mjs work && node bin/check.mjs work
+      - run: node bin/setup.mjs evals && node bin/check.mjs evals
       - name: actions-runner refuses a public repo
         run: if node bin/setup.mjs actions-runner; then exit 1; else exit 0; fi
   nix:

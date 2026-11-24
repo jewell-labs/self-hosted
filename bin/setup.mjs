@@ -144,6 +144,11 @@ if (id === "baseline") {
   const bins = await installWrappers();
   console.log(`work root ${layout().work}`);
   console.log(`wrappers ${bins.join(",")}`);
+} else if (id === "evals") {
+  const { evalUnit } = await import("../evals/unit.mjs");
+  const unit = evalUnit();
+  const dest = await writeState("evals.json", `${JSON.stringify(unit, null, 2)}\n`);
+  console.log(`wrote ${dest} evals=${unit.ids.join(",")}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("refusing actions-runner: this repository is public. Set ALLOW_PUBLIC_REPO_RUNNER=1 only if you accept pull-request code on this host.");

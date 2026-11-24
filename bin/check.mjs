@@ -226,6 +226,14 @@ if (id === "baseline") {
     process.exit(1);
   }
   console.log(`work ok ${projects.length} projects ${docs.length} harnesses`);
+} else if (id === "evals") {
+  const { evalUnit } = await import("../evals/unit.mjs");
+  const written = JSON.parse(await readFile(join(stateDir, "evals.json"), "utf8"));
+  if (JSON.stringify(written) !== JSON.stringify(evalUnit())) {
+    console.error("evals.json does not match the eval list");
+    process.exit(1);
+  }
+  console.log(`evals ok ${written.ids.join(",")}`);
 } else if (id === "actions-runner") {
   if (!plugin.publicRunnerAllowed) {
     console.error("actions-runner remains refused on a public repo");

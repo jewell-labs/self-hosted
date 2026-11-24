@@ -13,6 +13,7 @@ let
     "simulators"
     "portless"
     "work"
+    "evals"
   ];
 in
 runCommand "selfhost-plugins-check"

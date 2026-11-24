@@ -104,6 +104,14 @@
       "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
       "setup": ["nix run .#setup-work"],
       "validate": ["nix run .#check-work"]
+    },
+    {
+      "id": "evals",
+      "summary": "Isolated container evals for the llm and the decision models. Every coding harness is graded against the same agents instructions.",
+      "proofRequired": false,
+      "match": { "os": ["darwin", "linux"], "arch": ["arm64", "x64"] },
+      "setup": ["nix run .#setup-evals"],
+      "validate": ["nix run .#check-evals"]
     }
   ]
 }

@@ -19,6 +19,7 @@ let
     "simulators"
     "portless"
     "work"
+    "evals"
   ];
   harnessIds = map (name: lib.removeSuffix ".json" name) (
     lib.sort builtins.lessThan (
@@ -66,6 +67,10 @@ let
           cp ${script} $out/bin/${name}
           chmod 755 $out/bin/${name}
         '') harnessIds;
+    };
+    evals = plugin {
+      id = "evals";
+      summary = "Isolated container evals for the llm and the decision models. Every coding harness is graded against the same agents instructions.";
     };
   };
 in

@@ -1,0 +1,40 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "evals.setup",
+      "description": "Record the eval ids. Does not call a model or start a container.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "setup", "plugin": "evals" }
+    },
+    {
+      "name": "evals.check",
+      "description": "Check the recorded eval ids against the plugin. Does not call a model or start a container.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "check", "plugin": "evals" }
+    },
+    {
+      "name": "evals.list",
+      "description": "List the eval ids. llm-hierarchy grades every harness. decision-core uses the catalog decision model.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "evals-list", "plugin": "evals" }
+    },
+    {
+      "name": "evals.run",
+      "description": "Run one eval, or all of them, inside an isolated container. id and model are optional. This does not start the decision router.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "model": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "run": { "type": "evals-run", "plugin": "evals" }
+    }
+  ]
+}
