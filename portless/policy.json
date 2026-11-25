@@ -3,7 +3,6 @@
   "version": "0.18.1",
   "stateDir": ".self-hosted/portless",
   "caFile": "ca.pem",
-  "guestPort": 8443,
   "proxy": "https",
-  "appPortRange": [4000, 4999]
+  "services": ["mcp", "llm", "decision", "sshd"]
 }

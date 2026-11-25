@@ -5,22 +5,29 @@
       "name": "portless.setup",
       "description": "Record the host Portless policy. Does not start the proxy.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "setup", "plugin": "portless" }
-    },
-    {
-      "name": "portless.check",
-      "description": "Check the recorded Portless policy against the pinned version.",
-      "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "check", "plugin": "portless" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "portless"
+      }
     },
     {
       "name": "portless.status",
       "description": "Read the Portless proxy, CA path, guest bridge, and installed version.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "portless-status", "plugin": "portless" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "portless-status",
+        "plugin": "portless"
+      }
     },
     {
       "name": "portless.urls",
@@ -29,21 +36,67 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "services": { "type": "array" },
-          "prefix": { "type": "string" },
-          "repo": { "type": "string" }
+          "services": {
+            "type": "array"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "repo": {
+            "type": "string"
+          }
         },
-        "required": ["services"],
+        "required": [
+          "services"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "portless-urls", "plugin": "portless" }
+      "run": {
+        "type": "portless-urls",
+        "plugin": "portless"
+      }
     },
     {
       "name": "portless.forward",
       "description": "Listen on the VM bridge and forward guest HTTPS to the local Portless proxy.",
       "destructive": true,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "portless-forward", "plugin": "portless" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "portless-forward",
+        "plugin": "portless"
+      }
+    },
+    {
+      "name": "portless.check",
+      "description": "Check the portless unit recorded by portless.setup.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "portless"
+      }
+    },
+    {
+      "name": "portless.uninstall",
+      "description": "Delete the portless folder under the self-hosted home. That folder holds the install, config, and state portless.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
+        "plugin": "portless"
+      }
     }
   ]
 }

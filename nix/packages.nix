@@ -2,7 +2,10 @@
 { pkgs, self }:
 let
   inherit (pkgs) lib;
-  plugin = pkgs.callPackage ./plugin.nix { repo = self; };
+  txiki = pkgs.callPackage ./txiki.nix { };
+  syncio = pkgs.callPackage ./syncio.nix { };
+  plugin = pkgs.callPackage ./plugin.nix { repo = self; inherit txiki syncio; };
+  libExt = if pkgs.stdenv.isDarwin then "dylib" else "so";
   catalog = builtins.fromJSON (builtins.readFile ../catalog/plugins.json);
   pins = builtins.fromJSON (builtins.readFile ../catalog/pins.json);
   names = [
@@ -33,7 +36,7 @@ let
       summary = "Record the host facts the other plugins just discovered.";
       proofRequired = true;
     };
-    mcp = pkgs.callPackage ./plugins/mcp.nix { inherit plugin; repo = self; };
+    mcp = pkgs.callPackage ./plugins/mcp.nix { inherit plugin txiki syncio; repo = self; };
     llm = pkgs.callPackage ./plugins/llm.nix { inherit plugin; };
     decision = plugin {
       id = "decision";
@@ -51,7 +54,8 @@ let
     };
     portless = plugin {
       id = "portless";
-      summary = "One Portless proxy for local web apps, agent-browser, agent-desktop guests, and simulators.";
+      summary = "The core proxy. Host services are port {mcp}, port {llm}, port {decision}, and port {sshd}.";
+      proofRequired = true;
     };
     work = plugin {
       id = "work";
@@ -61,7 +65,9 @@ let
           script = pkgs.writeShellScript "selfhost-wrap-${name}" ''
             here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
             PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$here" | paste -sd: -) || true
-            exec ${pkgs.nodejs}/bin/node ${self}/work/wrap.mjs ${name} "$@"
+            export SELFHOST_RUN=${self}/bin/run.js
+            export SELFHOST_SYNCIO=${syncio}/lib/syncio.${libExt}
+            exec ${txiki}/bin/tjs run "$SELFHOST_RUN" ${self}/work/wrap.mjs ${name} "$@"
           '';
         in ''
           cp ${script} $out/bin/${name}
@@ -76,4 +82,5 @@ let
 in
 assert catalogIds == names;
 assert pins.nix == "2.36.0";
+assert pins.txiki == "26.11.0";
 packages

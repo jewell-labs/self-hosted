@@ -1,6 +1,6 @@
 import { keychainStatus, storeSecret } from "../plugins/cloudflare/keychain.mjs";
 
-const update = "just cloudflare-token";
+const update = "cloudflare-token";
 
 function write(body, code) {
   process.stdout.write(`${JSON.stringify(body)}\n`);

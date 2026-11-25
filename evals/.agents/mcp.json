@@ -5,22 +5,29 @@
       "name": "evals.setup",
       "description": "Record the eval ids. Does not call a model or start a container.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "setup", "plugin": "evals" }
-    },
-    {
-      "name": "evals.check",
-      "description": "Check the recorded eval ids against the plugin. Does not call a model or start a container.",
-      "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "check", "plugin": "evals" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "evals"
+      }
     },
     {
       "name": "evals.list",
       "description": "List the eval ids. llm-hierarchy grades every harness. decision-core uses the catalog decision model.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "evals-list", "plugin": "evals" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "evals-list",
+        "plugin": "evals"
+      }
     },
     {
       "name": "evals.run",
@@ -29,12 +36,61 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "model": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          }
         },
         "additionalProperties": false
       },
-      "run": { "type": "evals-run", "plugin": "evals" }
+      "run": {
+        "type": "evals-run",
+        "plugin": "evals"
+      }
+    },
+    {
+      "name": "evals.report",
+      "description": "Report how models are doing from the eval events. The live routine keeps writing those events.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "evals-report",
+        "plugin": "evals"
+      }
+    },
+    {
+      "name": "evals.check",
+      "description": "Check the evals unit recorded by evals.setup.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "evals"
+      }
+    },
+    {
+      "name": "evals.uninstall",
+      "description": "Delete the evals folder under the self-hosted home. That folder holds the install, config, and state evals.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
+        "plugin": "evals"
+      }
     }
   ]
 }

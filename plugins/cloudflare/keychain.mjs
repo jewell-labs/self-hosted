@@ -6,7 +6,7 @@ const execFileAsync = promisify(execFile);
 
 export const KEYCHAIN_SERVICE = "cloudflare";
 export const KEYCHAIN_ACCOUNT = "default";
-export const KEYCHAIN_UPDATE = "just cloudflare-token";
+export const KEYCHAIN_UPDATE = "cloudflare-token";
 
 const SECRET_KEYS = new Set([
   "access_token",

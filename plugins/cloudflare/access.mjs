@@ -1,11 +1,17 @@
-import { createPublicKey, verify } from "node:crypto";
-
 const SKEW_SEC = 60;
 const JWKS_TTL_MS = 10 * 60 * 1000;
 const jwksCache = new Map();
 
+function b64urlBytes(segment) {
+  const pad = segment.length % 4 === 0 ? "" : "=".repeat(4 - (segment.length % 4));
+  const bin = atob(segment.replaceAll("-", "+").replaceAll("_", "/") + pad);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
 function b64urlJson(segment) {
-  return JSON.parse(Buffer.from(segment, "base64url").toString("utf8"));
+  return JSON.parse(new TextDecoder().decode(b64urlBytes(segment)));
 }
 
 export function accessConfig(env = process.env) {
@@ -52,8 +58,8 @@ export async function verifyAccessJwt(token, config, env = process.env, now = Da
   const jwks = await fetchJwks(`https://${config.teamDomain}/cdn-cgi/access/certs`, env);
   const jwk = (jwks.keys ?? []).find((key) => key.kid === header.kid);
   if (!jwk) throw new Error("kid");
-  const key = createPublicKey({ key: jwk, format: "jwk" });
-  const ok = verify("RSA-SHA256", Buffer.from(`${h}.${p}`), key, Buffer.from(s, "base64url"));
+  const key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+  const ok = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64urlBytes(s), new TextEncoder().encode(`${h}.${p}`));
   if (!ok) throw new Error("sig");
   return payload;
 }

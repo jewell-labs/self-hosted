@@ -5,7 +5,7 @@ import { join, sep } from "node:path";
 import { promisify } from "node:util";
 import { repoRoot } from "../lib/discover.mjs";
 import { realInside, writeInside } from "../lib/jail.mjs";
-import { homeDir, layout } from "../lib/paths.mjs";
+import { homeDir, layout, pluginDir } from "../lib/paths.mjs";
 import { loadDescriptors } from "./harnesses.mjs";
 import { repoName, workPath } from "./names.mjs";
 
@@ -24,7 +24,7 @@ function sameProject(left, right) {
 }
 
 function projectsPath(env) {
-  return join(env.SELFHOST_STATE ?? layout(env).state, "projects.json");
+  return join(pluginDir("work", env), "projects.json");
 }
 
 export function chooseProject(answer, projects) {

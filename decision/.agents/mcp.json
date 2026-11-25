@@ -5,22 +5,29 @@
       "name": "decision.setup",
       "description": "Record the decision registry, resident slots, and router argv. Does not start a server.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "setup", "plugin": "decision" }
-    },
-    {
-      "name": "decision.check",
-      "description": "Check the recorded decision registry against the catalog and this host.",
-      "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "check", "plugin": "decision" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.models",
       "description": "List decision models and compound models. Does not read weight files.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "decision-models", "plugin": "decision" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "decision-models",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.call",
@@ -29,13 +36,23 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "model": { "type": "string" },
-          "text": { "type": "string" }
+          "model": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
         },
-        "required": ["model", "text"],
+        "required": [
+          "model",
+          "text"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "decision-call", "plugin": "decision" }
+      "run": {
+        "type": "decision-call",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.config",
@@ -43,18 +60,34 @@
       "destructive": false,
       "inputSchema": {
         "type": "object",
-        "properties": { "id": { "type": "string" } },
-        "required": ["id"],
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "decision-config", "plugin": "decision" }
+      "run": {
+        "type": "decision-config",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.usage",
       "description": "Read recent decision probe and call rows from the home usage log. Rows have no prompt text.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "decision-usage", "plugin": "decision" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "decision-usage",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.download",
@@ -63,15 +96,30 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "repo": { "type": "string" },
-          "file": { "type": "string" },
-          "id": { "type": "string" },
-          "revision": { "type": "string" }
+          "repo": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
         },
-        "required": ["repo", "file", "id"],
+        "required": [
+          "repo",
+          "file",
+          "id"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "decision-download", "plugin": "decision" }
+      "run": {
+        "type": "decision-download",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.remove",
@@ -79,11 +127,20 @@
       "destructive": false,
       "inputSchema": {
         "type": "object",
-        "properties": { "id": { "type": "string" } },
-        "required": ["id"],
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "decision-remove", "plugin": "decision" }
+      "run": {
+        "type": "decision-remove",
+        "plugin": "decision"
+      }
     },
     {
       "name": "decision.sample",
@@ -92,13 +149,51 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "seed": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "string"
+          }
         },
-        "required": ["id", "seed"],
+        "required": [
+          "id",
+          "seed"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "decision-sample", "plugin": "decision" }
+      "run": {
+        "type": "decision-sample",
+        "plugin": "decision"
+      }
+    },
+    {
+      "name": "decision.check",
+      "description": "Check the decision unit recorded by decision.setup.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "decision"
+      }
+    },
+    {
+      "name": "decision.uninstall",
+      "description": "Delete the decision folder under the self-hosted home. That folder holds the install, config, and state decision.setup wrote. The shared models library stays.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
+        "plugin": "decision"
+      }
     }
   ]
 }

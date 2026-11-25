@@ -5,15 +5,27 @@
       "name": "discover",
       "description": "Describe this host and every plugin, including the setup prompt and the setup and validate commands.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "discover" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "discover"
+      }
     },
     {
       "name": "mesh.list",
       "description": "List mesh tools, the repos that declared them, and the Cloudflare Access limits agents must stay inside.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "mesh-list" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "mesh-list"
+      }
     },
     {
       "name": "mesh.lsp",
@@ -21,10 +33,16 @@
       "destructive": false,
       "inputSchema": {
         "type": "object",
-        "properties": { "name": { "type": "string" } },
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
         "additionalProperties": false
       },
-      "run": { "type": "mesh-lsp" }
+      "run": {
+        "type": "mesh-lsp"
+      }
     },
     {
       "name": "doctor",
@@ -33,11 +51,128 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "level": { "type": "string", "enum": ["shape", "mesh", "repos", "strict"] }
+          "level": {
+            "type": "string",
+            "enum": [
+              "shape",
+              "mesh",
+              "repos",
+              "strict"
+            ]
+          }
         },
         "additionalProperties": false
       },
-      "run": { "type": "doctor" }
+      "run": {
+        "type": "doctor"
+      }
+    },
+    {
+      "name": "repos",
+      "description": "Repo list and sync interval from github-repos/config. Does not fetch.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "repos" }
+    },
+    {
+      "name": "explore",
+      "description": "Show this checkout and each mirrored repo: path, HEAD, dirty, and top-level names. Does not fetch.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "explore" }
+    },
+    {
+      "name": "sync",
+      "description": "Mirror github-repos/config, then lock the reference tree read-only.",
+      "destructive": true,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "sync" }
+    },
+    {
+      "name": "prove",
+      "description": "Container proof. Requires a model id. Does not mount this machine's weights or tokens.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "model": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "run": { "type": "prove" }
+    },
+    {
+      "name": "attach-plan",
+      "description": "Print one mount of this home for an Apple container and a macOS sandbox share. Does not start a guest.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "filter": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "run": { "type": "attach-plan" }
+    },
+    {
+      "name": "attach-run",
+      "description": "Start an Apple container with this home attached. The image is an argument. A filter JSON selects models and skills.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "filter": { "type": "string" },
+          "image": { "type": "string" },
+          "command": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["image"],
+        "additionalProperties": false
+      },
+      "run": { "type": "attach-run" }
+    },
+    {
+      "name": "attach-macos",
+      "description": "Put this home on one macOS sandbox share. Does not start the VM.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sandbox": { "type": "string" },
+          "name": { "type": "string" },
+          "filter": { "type": "string" }
+        },
+        "required": ["sandbox"],
+        "additionalProperties": false
+      },
+      "run": { "type": "attach-macos" }
+    },
+    {
+      "name": "nuke",
+      "description": "Remove this account's self-hosted state. Keeps models, llm, decision, containers, and agent-desktop.",
+      "destructive": true,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "nuke" }
+    },
+    {
+      "name": "nuke-all",
+      "description": "Remove this account's self-hosted state, including models, llm, decision, containers, and agent-desktop.",
+      "destructive": true,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "nuke-all" }
+    },
+    {
+      "name": "adopt",
+      "description": "Move an older layout into the self-hosted home and leave symlinks behind.",
+      "destructive": true,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "adopt" }
+    },
+    {
+      "name": "flake",
+      "description": "Run nix flake check for this checkout. That is the Nix check of every plugin package.",
+      "destructive": false,
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "run": { "type": "flake" }
     },
     {
       "name": "mesh.skill",
@@ -45,18 +180,55 @@
       "destructive": false,
       "inputSchema": {
         "type": "object",
-        "properties": { "name": { "type": "string" } },
-        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "mesh-skill" }
+      "run": {
+        "type": "mesh-skill"
+      }
     },
     {
       "name": "events.webhooks",
       "description": "Return the one event schema and each plugin webhook. Watch GET /events and filter with plugin, type, and name.",
       "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "events-webhooks"
+      }
+    },
+    {
+      "name": "events.history",
+      "description": "Read the event log. Filter with plugin, type, name, and since. This is the history of every plugin.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plugin": { "type": "string" },
+          "type": { "type": "string" },
+          "name": { "type": "string" },
+          "since": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "run": { "type": "events-history" }
+    },
+    {
+      "name": "events.describe",
+      "description": "Describe this system from the event log. A plugin is ok when every latest event is ok.",
+      "destructive": false,
       "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "events-webhooks" }
+      "run": { "type": "events-describe" }
     },
     {
       "name": "events.workflow",
@@ -65,14 +237,35 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "plugin": { "type": "string" },
-          "name": { "type": "string", "enum": ["ci", "clean"] },
-          "detail": { "type": "string", "enum": ["started", "ok", "error"] }
+          "plugin": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "ci",
+              "clean"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "started",
+              "ok",
+              "error"
+            ]
+          }
         },
-        "required": ["plugin", "name", "detail"],
+        "required": [
+          "plugin",
+          "name",
+          "detail"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "events-workflow" }
+      "run": {
+        "type": "events-workflow"
+      }
     }
   ]
 }

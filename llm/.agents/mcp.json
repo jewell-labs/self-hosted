@@ -5,22 +5,29 @@
       "name": "llm.setup",
       "description": "Write the llama.cpp profile for this host's llm server. Does not start it and does not load decision models.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "setup", "plugin": "llm" }
-    },
-    {
-      "name": "llm.check",
-      "description": "Check the llm unit against the profile discover selected.",
-      "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "check", "plugin": "llm" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "llm"
+      }
     },
     {
       "name": "llm.models",
       "description": "List llm weights in the shared library, free space, and the disk reserve from home/policy.json.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "llm-models", "plugin": "llm" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "llm-models",
+        "plugin": "llm"
+      }
     },
     {
       "name": "llm.config",
@@ -28,18 +35,34 @@
       "destructive": false,
       "inputSchema": {
         "type": "object",
-        "properties": { "file": { "type": "string" } },
-        "required": ["file"],
+        "properties": {
+          "file": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "llm-config", "plugin": "llm" }
+      "run": {
+        "type": "llm-config",
+        "plugin": "llm"
+      }
     },
     {
       "name": "llm.usage",
       "description": "Read recent llm probe and call rows from the home usage log. Rows have no prompt text.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "llm-usage", "plugin": "llm" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "llm-usage",
+        "plugin": "llm"
+      }
     },
     {
       "name": "llm.download",
@@ -48,14 +71,26 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "repo": { "type": "string" },
-          "file": { "type": "string" },
-          "revision": { "type": "string" }
+          "repo": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
         },
-        "required": ["repo", "file"],
+        "required": [
+          "repo",
+          "file"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "llm-download", "plugin": "llm" }
+      "run": {
+        "type": "llm-download",
+        "plugin": "llm"
+      }
     },
     {
       "name": "llm.remove",
@@ -63,11 +98,20 @@
       "destructive": false,
       "inputSchema": {
         "type": "object",
-        "properties": { "file": { "type": "string" } },
-        "required": ["file"],
+        "properties": {
+          "file": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "llm-remove", "plugin": "llm" }
+      "run": {
+        "type": "llm-remove",
+        "plugin": "llm"
+      }
     },
     {
       "name": "llm.sample",
@@ -76,13 +120,51 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "file": { "type": "string" },
-          "seed": { "type": "string" }
+          "file": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "string"
+          }
         },
-        "required": ["file", "seed"],
+        "required": [
+          "file",
+          "seed"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "llm-sample", "plugin": "llm" }
+      "run": {
+        "type": "llm-sample",
+        "plugin": "llm"
+      }
+    },
+    {
+      "name": "llm.check",
+      "description": "Check the llm unit recorded by llm.setup.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "llm"
+      }
+    },
+    {
+      "name": "llm.uninstall",
+      "description": "Delete the llm folder under the self-hosted home. That folder holds the install, config, and state llm.setup wrote. The shared models library stays.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
+        "plugin": "llm"
+      }
     }
   ]
 }

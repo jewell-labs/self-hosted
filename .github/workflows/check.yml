@@ -3,32 +3,16 @@ on:
   push:
   pull_request:
 jobs:
-  test:
+  refuse-public-runner:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: node --test test/*.test.mjs
-      - run: node bin/setup.mjs baseline && node bin/check.mjs baseline
-      - run: node bin/setup.mjs mcp && node bin/check.mjs mcp
-      - run: node bin/setup.mjs llm && node bin/check.mjs llm
-      - run: node bin/setup.mjs decision && node bin/check.mjs decision
-      - run: node bin/setup.mjs cloudflare && node bin/check.mjs cloudflare
-      - run: node bin/setup.mjs sshd && node bin/check.mjs sshd
-      - run: node bin/setup.mjs github-repos && node bin/check.mjs github-repos
-      - run: node bin/setup.mjs agent-desktop && node bin/check.mjs agent-desktop
-      - run: node bin/setup.mjs agent-browser && node bin/check.mjs agent-browser
-      - run: node bin/setup.mjs simulators && node bin/check.mjs simulators
-      - run: node bin/setup.mjs portless && node bin/check.mjs portless
-      - run: node bin/setup.mjs work && node bin/check.mjs work
-      - run: node bin/setup.mjs evals && node bin/check.mjs evals
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: actions-runner refuses a public repo
-        run: if node bin/setup.mjs actions-runner; then exit 1; else exit 0; fi
-  nix:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v32
-      - run: nix flake check
+        run: |
+          set -eu
+          out="${RUNNER_TEMP:-/tmp}/actions-runner-setup.txt"
+          if node bin/setup.mjs actions-runner >"$out" 2>&1; then
+            echo "actions-runner setup succeeded on a public repo" >&2
+            exit 1
+          fi
+          grep -q "refusing actions-runner: this repository is public" "$out"

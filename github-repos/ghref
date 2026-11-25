@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only main worktrees under ~/.self-hosted/github, backed by bare mirrors.
+# Read-only main worktrees under ~/.self-hosted/github-repos, backed by bare mirrors.
 # The repo list and the sync interval come from ./config next to this file.
 #
 #   github-repos/ghref                       sync, then re-lock the reference tree read-only
@@ -25,13 +25,15 @@ done < "$CONFIG"
 [ "${#repos[@]}" -gt 0 ] || { echo "ghref: config has no repos" >&2; exit 1; }
 
 HOST=${SELFHOST_HOME:-$HOME/.self-hosted}
-REF=${GHREF_REF:-$HOST/github}
-STORE=${GHREF_STORE:-$HOST/ghref}
+PLUGIN=$HOST/github-repos
+REF=${GHREF_REF:-$PLUGIN/github}
+STORE=${GHREF_STORE:-$PLUGIN/ghref}
 BASE=${GHREF_BASE:-https://github.com/}
 LABEL=local.ghref
+AGENT=$PLUGIN/launchd/$LABEL.plist
 PLIST=$HOME/Library/LaunchAgents/$LABEL.plist
-LOG=$HOST/logs/ghref.log
-BIN=${GHREF_BIN:-$HOST/bin/ghref}
+LOG=$PLUGIN/logs/ghref.log
+BIN=${GHREF_BIN:-$PLUGIN/bin/ghref}
 
 warn(){ echo "WARN $*"; }
 die(){ echo "ghref: $*" >&2; exit 1; }
@@ -73,8 +75,8 @@ sync_one(){
 }
 
 write_plist(){
-  mkdir -p "${PLIST%/*}" "${LOG%/*}"
-  cat > "$PLIST" <<PL
+  mkdir -p "${AGENT%/*}" "${PLIST%/*}" "${LOG%/*}"
+  cat > "$AGENT" <<PL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -87,6 +89,7 @@ write_plist(){
   <key>StandardErrorPath</key><string>$LOG</string>
 </dict></plist>
 PL
+  ln -sfn "$AGENT" "$PLIST"
 }
 
 case ${1:-sync} in
@@ -114,16 +117,12 @@ case ${1:-sync} in
     write_plist
     mkdir -p "${BIN%/*}"
     ln -sfn "$ROOT/ghref" "$BIN"
-    (
-      cd "$ROOT/.." && SELFHOST_AGENT_LABEL="$LABEL" SELFHOST_AGENT_FILE="$PLIST" \
-        node --input-type=module -e 'import { readFileSync } from "node:fs"; import { saveAgent } from "./lib/launchd.mjs"; saveAgent(process.env, process.env.SELFHOST_AGENT_LABEL, readFileSync(process.env.SELFHOST_AGENT_FILE, "utf8"));'
-    )
     launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
     launchctl bootstrap "gui/$(id -u)" "$PLIST"
     echo "scheduled every ${interval}s from $ROOT/ghref; log: $LOG" ;;
   uninstall)
     launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-    rm -f "$PLIST"
+    rm -f "$PLIST" "$AGENT"
     echo "unscheduled" ;;
   *) die "unknown command $1" ;;
 esac

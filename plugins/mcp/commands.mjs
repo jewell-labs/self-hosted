@@ -46,8 +46,8 @@ function startServer(root, env) {
 export async function setup(ctx) {
   const unit = {
     bind: "127.0.0.1",
-    port: Number(process.env.PORT ?? 8473),
-    command: ["node", "mcp/server.mjs"],
+    port: "port {mcp}",
+    command: ["bin/selfhost", "mcp/server.mjs"],
     access: ctx.plugin.access,
   };
   const dest = await ctx.writeState("mcp.json", `${JSON.stringify(unit, null, 2)}\n`);
@@ -56,15 +56,15 @@ export async function setup(ctx) {
 
 export async function check(ctx) {
   const unit = JSON.parse(await readFile(join(ctx.stateDir, "mcp.json"), "utf8"));
-  if (unit.bind !== "127.0.0.1" || (unit.access !== "loopback-only" && unit.access !== "cloudflare-access")) {
-    console.error("mcp unit is not loopback or access-gated");
+  if (unit.bind !== "127.0.0.1" || unit.port !== "port {mcp}" || (unit.access !== "loopback-only" && unit.access !== "cloudflare-access")) {
+    console.error("mcp unit is not loopback, port {mcp}, or access-gated");
     process.exit(1);
   }
   const open = await startServer(ctx.root, { PORT: "0", BIND_HOST: "127.0.0.1" });
   try {
-    const listed = await post(open.info.port, { jsonrpc: "2.0", id: 1, method: "tools/list" });
+    const listed = await post(open.info.listen, { jsonrpc: "2.0", id: 1, method: "tools/list" });
     if (listed.status !== 200 || !listed.text.includes("discover")) throw new Error(`tools/list failed ${listed.status}`);
-    const called = await post(open.info.port, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "discover", arguments: {} } });
+    const called = await post(open.info.listen, { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "discover", arguments: {} } });
     const parsed = JSON.parse(called.text);
     const payload = JSON.parse(parsed.result.content[0].text);
     if (payload.schema !== "jewell-labs.self-hosted.discover.v1" || !payload.setupPrompt.includes("setup-host")) {

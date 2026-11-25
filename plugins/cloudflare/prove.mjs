@@ -1,12 +1,13 @@
 import { spawn } from "node:child_process";
-import { generateKeyPairSync, sign } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 function b64url(value) {
-  const buf = Buffer.isBuffer(value) ? value : Buffer.from(value);
-  return buf.toString("base64url");
+  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : new Uint8Array(value);
+  let bin = "";
+  for (const byte of bytes) bin += String.fromCharCode(byte);
+  return btoa(bin).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }
 
 function startServer(root, env) {
@@ -56,8 +57,12 @@ async function post(port, body, headers = {}) {
 export async function proveAccess(root) {
   const dir = await mkdtemp(join(tmpdir(), "selfhost-access-"));
   try {
-    const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-    const jwk = publicKey.export({ format: "jwk" });
+    const pair = await crypto.subtle.generateKey(
+      { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+      true,
+      ["sign", "verify"],
+    );
+    const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
     jwk.kid = "proof";
     jwk.alg = "RS256";
     jwk.use = "sig";
@@ -71,7 +76,7 @@ export async function proveAccess(root) {
       SELFHOST_ACCESS_JWKS_FILE: jwksPath,
     });
     try {
-      const denied = await post(gated.info.port, { jsonrpc: "2.0", id: 1, method: "tools/list" });
+      const denied = await post(gated.info.listen, { jsonrpc: "2.0", id: 1, method: "tools/list" });
       if (denied.status !== 401) throw new Error(`expected 401 without jwt, got ${denied.status}`);
       const header = b64url(JSON.stringify({ alg: "RS256", kid: "proof", typ: "JWT" }));
       const body = b64url(JSON.stringify({
@@ -80,13 +85,13 @@ export async function proveAccess(root) {
         exp: Math.floor(Date.now() / 1000) + 600,
         sub: "proof",
       }));
-      const sig = sign("RSA-SHA256", Buffer.from(`${header}.${body}`), privateKey).toString("base64url");
+      const sig = b64url(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", pair.privateKey, new TextEncoder().encode(`${header}.${body}`)));
       const allowed = await post(
-        gated.info.port,
+        gated.info.listen,
         { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "discover", arguments: {} } },
         { "cf-access-jwt-assertion": `${header}.${body}.${sig}` },
       );
-      if (allowed.status !== 200) throw new Error(`expected 200 with jwt, got ${allowed.status}`);
+      if (allowed.status !== 200) throw new Error(`expected 200 with jwt, got ${allowed.status}: ${allowed.text.slice(0, 240)}`);
     } finally {
       gated.child.kill();
     }

@@ -28,7 +28,11 @@ runCommand "selfhost-plugins-check"
       ${packages.${id}}/bin/setup
       ${packages.${id}}/bin/check
     '') ids}
-    ${packages.actions-runner}/bin/check
+    # This catalog is public. The check program must refuse actions-runner.
+    if ${packages.actions-runner}/bin/check; then
+      echo "actions-runner check passed on a public catalog" >&2
+      exit 1
+    fi
     agent-desktop version | grep -q '1.3.1'
     agent-browser --version | grep -q '0.43.0'
     test -x ${packages.llm}/bin/llama-server

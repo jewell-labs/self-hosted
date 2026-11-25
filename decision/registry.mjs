@@ -7,7 +7,7 @@ import { layout } from "../lib/paths.mjs";
 const defaultRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const DECISION_SCHEMA = "jewell-labs.self-hosted.decision.v1";
-export const DECISION_PORT = 8090;
+export const DECISION_PORT = "port {decision}";
 const ID_RE = /^[a-z0-9]+([.-][a-z0-9]+)*$/;
 const LLM_RESERVE_GB = 16;
 const PER_MODEL_GB = 8;
@@ -111,7 +111,7 @@ export function decisionUnit(env = process.env, root = env.SELFHOST_ROOT ?? defa
       bin: "llama-server",
       args: [
         "--host", "127.0.0.1",
-        "--port", String(DECISION_PORT),
+        "--port", "{{port}}",
         "--models-dir", paths.decisionModels,
         "--models-max", String(slots),
         "--parallel", "1",

@@ -2,6 +2,7 @@ import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { repoRoot } from "../lib/discover.mjs";
 import { layout } from "../lib/paths.mjs";
+import { serviceUrl } from "../portless/host.mjs";
 import { cleanWork } from "./store.mjs";
 
 const EVERY = { "1h": 60 * 60 * 1000, "1d": 24 * 60 * 60 * 1000, "3d": 3 * 24 * 60 * 60 * 1000 };
@@ -15,7 +16,6 @@ export function due(every, last, now) {
 }
 
 async function emit(env, detail) {
-  const port = env.PORT ?? "8473";
   const body = {
     jsonrpc: "2.0",
     id: 1,
@@ -23,7 +23,7 @@ async function emit(env, detail) {
     params: { name: "events.workflow", arguments: { plugin: "work", name: "clean", detail } },
   };
   try {
-    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+    const response = await fetch(`${serviceUrl("mcp")}/mcp`, {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json" },
       body: JSON.stringify(body),

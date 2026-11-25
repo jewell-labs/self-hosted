@@ -1,0 +1,50 @@
+#!/bin/sh
+# Tool scripts run on txiki.js. This shell only finds that binary and the sync helper.
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+PIN="$ROOT/runtime/txiki.json"
+TJS="${SELFHOST_TJS:-}"
+if [ -z "$TJS" ]; then
+  if [ -x "$ROOT/runtime/txiki/tjs" ]; then
+    TJS="$ROOT/runtime/txiki/tjs"
+  elif [ "$(uname -s)" = "Darwin" ]; then
+    arch=$(uname -m)
+    case "$arch" in
+      arm64|aarch64) key=arm64 ;;
+      x86_64) key=x64 ;;
+      *) echo "txiki.js has no binary for $arch" >&2; exit 1 ;;
+    esac
+    meta=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); row=d["darwin"][sys.argv[2]]; print(row["url"]); print(row["sha256"])' "$PIN" "$key")
+    url=$(printf '%s\n' "$meta" | sed -n '1p')
+    sha=$(printf '%s\n' "$meta" | sed -n '2p')
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    curl -fsSL -o "$tmp/txiki.zip" "$url"
+    printf '%s  %s\n' "$sha" "$tmp/txiki.zip" | shasum -a 256 -c -
+    unzip -q "$tmp/txiki.zip" -d "$tmp/out"
+    found=$(find "$tmp/out" -type f -name tjs -print -quit)
+    mkdir -p "$ROOT/runtime/txiki"
+    cp "$found" "$ROOT/runtime/txiki/tjs"
+    chmod 755 "$ROOT/runtime/txiki/tjs"
+    TJS="$ROOT/runtime/txiki/tjs"
+    trap - EXIT
+    rm -rf "$tmp"
+  else
+    echo "txiki.js has no Linux zip. Set SELFHOST_TJS or build the nix package." >&2
+    exit 1
+  fi
+fi
+if [ "$(uname -s)" = "Darwin" ]; then
+  ext=dylib
+  flag=-dynamiclib
+else
+  ext=so
+  flag=-shared
+fi
+LIB="${SELFHOST_SYNCIO:-$ROOT/runtime/syncio.$ext}"
+if [ ! -f "$LIB" ] || [ "$ROOT/runtime/syncio.c" -nt "$LIB" ]; then
+  clang -O2 -fPIC "$flag" -o "$LIB" "$ROOT/runtime/syncio.c"
+fi
+export SELFHOST_RUN="$ROOT/bin/run.js"
+export SELFHOST_SYNCIO="$LIB"
+exec "$TJS" run "$SELFHOST_RUN" "$@"

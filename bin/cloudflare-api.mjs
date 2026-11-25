@@ -5,7 +5,7 @@ const method = process.argv[2];
 const path = process.argv[3];
 const file = process.argv[4] ?? "";
 if (!method || !path) {
-  process.stderr.write("usage: node bin/cloudflare-api.mjs METHOD PATH [FILE]\n");
+  process.stderr.write("usage: bin/selfhost bin/cloudflare-api.mjs METHOD PATH [FILE]\n");
   process.exit(2);
 }
 

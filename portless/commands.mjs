@@ -18,7 +18,7 @@ export async function check(ctx) {
   const written = await readPortlessState(ctx.stateDir);
   const policy = loadPolicy();
   const pins = JSON.parse(readFileSync(join(ctx.root, "catalog/pins.json"), "utf8"));
-  if (written.version !== pins.portless || written.version !== policy.version || written.guestPort !== policy.guestPort || written.proxy !== policy.proxy || written.stateDir !== layout().portless || policy.stateDir !== ".self-hosted/portless") {
+  if (written.version !== pins.portless || written.version !== policy.version || written.services.join() !== policy.services.join() || written.proxy !== policy.proxy || written.stateDir !== layout().portless || policy.stateDir !== ".self-hosted/portless") {
     console.error("portless.json does not match the host policy");
     process.exit(1);
   }

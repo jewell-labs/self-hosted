@@ -4,7 +4,7 @@ let
     name = "cloudflared-tunnel";
     runtimeInputs = [ cloudflared coreutils ];
     text = ''
-      token_file="''${CLOUDFLARED_TOKEN_FILE:-$HOME/.self-hosted/cloudflared/token}"
+      token_file="''${CLOUDFLARED_TOKEN_FILE:-$HOME/.self-hosted/cloudflare/tunnel/token}"
       if [[ ! -f $token_file ]]; then
         echo "cloudflared: missing $token_file" >&2
         exit 1

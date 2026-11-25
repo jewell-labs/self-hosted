@@ -1,12 +1,11 @@
-// Record the llm server plist inside ~/.self-hosted/launchd. This does not install a LaunchAgent
-// and does not write outside the home. Weights stay in the shared library.
-// Usage: node bin/install-darwin-llama.mjs
+// Record the llm server plist inside ~/.self-hosted/llm. This does not install a LaunchAgent.
+// Weights stay in the shared library. The log stays in the llm folder.
+// Usage: bin/selfhost bin/install-darwin-llama.mjs
 import { join } from "node:path";
-import { JailError, realInsideSync } from "../lib/jail.mjs";
-import { saveAgent } from "../lib/launchd.mjs";
+import { JailError, realInsideSync, writeSyncInside } from "../lib/jail.mjs";
 import { selectLlmProfile } from "../lib/profiles.mjs";
 import { readHost } from "../lib/host.mjs";
-import { homeDir, layout } from "../lib/paths.mjs";
+import { homeDir, layout, pluginDir } from "../lib/paths.mjs";
 
 if (process.platform !== "darwin") {
   console.error("install-darwin-llama.mjs is for macOS");
@@ -27,9 +26,11 @@ try {
   console.error(error instanceof JailError ? error.message : "models dir is outside the home");
   process.exit(1);
 }
-const args = [bin, ...profile.args, "--models-dir", modelsDir];
+const rendered = profile.args.map((arg) => (arg === "{{port}}" ? '"$PORT"' : `'${String(arg).replaceAll("'", "'\\''")}'`));
+const command = `exec '${String(bin).replaceAll("'", "'\\''")}' ${rendered.join(" ")} --models-dir '${String(modelsDir).replaceAll("'", "'\\''")}'`;
+const args = [process.env.PORTLESS ?? "portless", profile.port, "--", "/bin/sh", "-c", command];
 const label = "com.jewell-labs.llama-server";
-const log = join(layout().logs, "jewell-labs-llama-server.log");
+const log = join(pluginDir("llm"), "logs", "jewell-labs-llama-server.log");
 const xmlArgs = args.map((arg) => `    <string>${arg.replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</string>`).join("\n");
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -54,8 +55,8 @@ ${xmlArgs}
 `;
 let plistPath;
 try {
-  realInsideSync(root, join(layout().launchd, "agents", `${label}.plist`));
-  plistPath = saveAgent(process.env, label, plist);
+  plistPath = join(pluginDir("llm"), "launchd", "agents", `${label}.plist`);
+  writeSyncInside(root, plistPath, plist);
 } catch (error) {
   console.error(error instanceof JailError ? error.message : error.message);
   process.exit(1);

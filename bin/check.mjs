@@ -2,16 +2,16 @@ import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildDiscovery, repoRoot } from "../lib/discover.mjs";
-import { layout } from "../lib/paths.mjs";
+import { pluginDir } from "../lib/paths.mjs";
 
 const id = process.argv[2];
 if (!id) {
-  console.error("usage: node bin/check.mjs <plugin>");
+  console.error("usage: bin/selfhost bin/check.mjs <plugin>");
   process.exit(2);
 }
 
 const root = repoRoot();
-const stateDir = process.env.SELFHOST_STATE ?? layout().state;
+const stateDir = pluginDir(id);
 const discovery = buildDiscovery();
 const plugin = discovery.plugins.find((item) => item.id === id);
 if (!plugin?.applicable) {

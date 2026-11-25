@@ -17,7 +17,7 @@
     },
     {
       "name": "agent-browser.check",
-      "description": "Check the agent-browser unit against this host.",
+      "description": "Check the agent-browser unit recorded by agent-browser.setup.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -26,6 +26,20 @@
       },
       "run": {
         "type": "check",
+        "plugin": "agent-browser"
+      }
+    },
+    {
+      "name": "agent-browser.uninstall",
+      "description": "Delete the agent-browser folder under the self-hosted home. That folder holds the install, config, and state agent-browser.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
         "plugin": "agent-browser"
       }
     }

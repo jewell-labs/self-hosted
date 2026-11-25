@@ -1,5 +1,5 @@
 # NixOS module for the llm server only. Off unless services.jewell-labs-self-hosted.llm.enable is set.
-# Decision models use the decision plugin and port 8090. They are not this unit.
+# Decision models use the decision plugin and port {decision}. They are not this unit.
 # macOS and CUDA argv stay in lib/profiles.mjs.
 { config, lib, pkgs, ... }:
 let
@@ -21,26 +21,9 @@ in
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         ExecStart = lib.escapeShellArgs [
-          "${pkgs.llama-cpp}/bin/llama-server"
-          "--host"
-          "127.0.0.1"
-          "--port"
-          "8080"
-          "--jinja"
-          "--flash-attn"
-          "off"
-          "--n-gpu-layers"
-          "0"
-          "--ctx-size"
-          "4096"
-          "--parallel"
-          "1"
-          "--models-max"
-          "1"
-          "--no-webui"
-          "--metrics"
-          "--models-dir"
-          cfg.modelsDir
+          "${pkgs.bash}/bin/bash"
+          "-c"
+          "exec portless llm -- ${pkgs.llama-cpp}/bin/llama-server --host 127.0.0.1 --port \"$PORT\" --jinja --flash-attn off --n-gpu-layers 0 --ctx-size 4096 --parallel 1 --models-max 1 --no-webui --metrics --models-dir ${lib.escapeShellArg cfg.modelsDir}"
         ];
       };
     };

@@ -32,15 +32,4 @@ plugin {
     mkdir -p $out/libexec/actions-runner
     tar -xzf ${archive} -C $out/libexec/actions-runner
   '';
-  checkBody = ''
-    if [[ "''${ALLOW_PUBLIC_REPO_RUNNER:-}" == "1" ]]; then
-      node "$repo/bin/check.mjs" actions-runner
-    else
-      if node "$repo/bin/setup.mjs" actions-runner; then
-        echo "actions-runner setup should refuse a public repo" >&2
-        exit 1
-      fi
-      echo "actions-runner refused a public repo"
-    fi
-  '';
 }

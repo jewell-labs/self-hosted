@@ -50,8 +50,8 @@ export function cloudflareUnit(env = process.env) {
       mechanism: "macos-keychain",
       service: "cloudflare",
       account: "default",
-      update: "just cloudflare-token",
-      call: "just cloudflare-api",
+      update: "cloudflare-token",
+      call: "cloudflare-api",
     },
   };
 }

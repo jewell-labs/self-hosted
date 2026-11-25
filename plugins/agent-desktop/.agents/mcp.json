@@ -17,7 +17,7 @@
     },
     {
       "name": "agent-desktop.check",
-      "description": "Check the agent-desktop unit against this host.",
+      "description": "Check the agent-desktop unit recorded by agent-desktop.setup.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -26,6 +26,20 @@
       },
       "run": {
         "type": "check",
+        "plugin": "agent-desktop"
+      }
+    },
+    {
+      "name": "agent-desktop.uninstall",
+      "description": "Delete the agent-desktop folder under the self-hosted home. That folder holds the install, config, and state agent-desktop.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
         "plugin": "agent-desktop"
       }
     }

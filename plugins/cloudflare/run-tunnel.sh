@@ -1,7 +1,7 @@
 #!/bin/sh
 # Reads the tunnel token from a mode 0600 file. The token is not a flag and not in git.
 set -eu
-token_file=${CLOUDFLARED_TOKEN_FILE:-"$HOME/.self-hosted/cloudflared/token"}
+token_file=${CLOUDFLARED_TOKEN_FILE:-"$HOME/.self-hosted/cloudflare/tunnel/token"}
 if [ ! -f "$token_file" ]; then
   echo "cloudflared: missing $token_file" >&2
   exit 1

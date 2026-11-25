@@ -17,7 +17,7 @@
     },
     {
       "name": "actions-runner.check",
-      "description": "Check the actions-runner unit against this host.",
+      "description": "Check the actions-runner unit recorded by actions-runner.setup.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -26,6 +26,20 @@
       },
       "run": {
         "type": "check",
+        "plugin": "actions-runner"
+      }
+    },
+    {
+      "name": "actions-runner.uninstall",
+      "description": "Delete the actions-runner folder under the self-hosted home. That folder holds the install, config, and state actions-runner.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
         "plugin": "actions-runner"
       }
     }

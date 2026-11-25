@@ -17,7 +17,7 @@
     },
     {
       "name": "github-repos.check",
-      "description": "Check the github-repos unit against this host.",
+      "description": "Check the github-repos unit recorded by github-repos.setup.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -26,6 +26,20 @@
       },
       "run": {
         "type": "check",
+        "plugin": "github-repos"
+      }
+    },
+    {
+      "name": "github-repos.uninstall",
+      "description": "Delete the github-repos folder under the self-hosted home. That folder holds the install, config, and state github-repos.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
         "plugin": "github-repos"
       }
     }

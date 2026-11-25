@@ -5,3 +5,6 @@ result-*
 .env
 *.token
 .DS_Store
+runtime/txiki/
+runtime/syncio.dylib
+runtime/syncio.so

@@ -23,7 +23,7 @@ export function adminRequest(method, path, body) {
 
 export async function adminCall({ method, path, body, env = process.env, fetchImpl = globalThis.fetch, secret }) {
   const request = adminRequest(method, path, body);
-  if (!request.ok) return { ...request, update: "just cloudflare-token" };
+  if (!request.ok) return { ...request, update: "cloudflare-token" };
   let token = secret;
   if (token === undefined) {
     const status = await keychainStatus(env);
@@ -34,7 +34,7 @@ export async function adminCall({ method, path, body, env = process.env, fetchIm
     }
     token = loaded.secret;
   }
-  if (request.body && request.body.includes(token)) return { ok: false, reason: "body", update: "just cloudflare-token" };
+  if (request.body && request.body.includes(token)) return { ok: false, reason: "body", update: "cloudflare-token" };
   const headers = { Accept: "application/json", Authorization: `Bearer ${token}` };
   const init = { method: request.method, headers, redirect: "manual" };
   if (request.body) {
@@ -45,10 +45,10 @@ export async function adminCall({ method, path, body, env = process.env, fetchIm
   try {
     response = await fetchImpl(`https://api.cloudflare.com${request.path}`, init);
   } catch {
-    return { ok: false, reason: "request", update: "just cloudflare-token" };
+    return { ok: false, reason: "request", update: "cloudflare-token" };
   }
   if (response.status >= 300 && response.status < 400) {
-    return { ok: false, status: response.status, reason: "redirect", update: "just cloudflare-token" };
+    return { ok: false, status: response.status, reason: "redirect", update: "cloudflare-token" };
   }
   const text = await response.text();
   let parsed;

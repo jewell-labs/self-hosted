@@ -5,22 +5,29 @@
       "name": "work.setup",
       "description": "Record that work directories live under ~/.self-hosted/work. Does not clone.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "setup", "plugin": "work" }
-    },
-    {
-      "name": "work.check",
-      "description": "Check the work routine and that project names come from github-repos/config.",
-      "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "check", "plugin": "work" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "work"
+      }
     },
     {
       "name": "work.list",
       "description": "List projects from github-repos/config and the live work directories.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "work-list", "plugin": "work" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "work-list",
+        "plugin": "work"
+      }
     },
     {
       "name": "work.create",
@@ -29,30 +36,62 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "project": { "type": "string" },
-          "harness": { "type": "string" },
-          "domain": { "type": "string" },
-          "slug": { "type": "string" },
-          "branch": { "type": "string" }
+          "project": {
+            "type": "string"
+          },
+          "harness": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "branch": {
+            "type": "string"
+          }
         },
-        "required": ["project", "harness", "domain", "slug"],
+        "required": [
+          "project",
+          "harness",
+          "domain",
+          "slug"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "work-create", "plugin": "work" }
+      "run": {
+        "type": "work-create",
+        "plugin": "work"
+      }
     },
     {
       "name": "work.clean",
       "description": "Remove work directories older than 3 days whose harness is not running.",
       "destructive": true,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "work-clean", "plugin": "work" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "work-clean",
+        "plugin": "work"
+      }
     },
     {
       "name": "harness.list",
       "description": "Probe every harness descriptor under work/harnesses. A new json file is a new harness.",
       "destructive": false,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "harness-list", "plugin": "work" }
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "harness-list",
+        "plugin": "work"
+      }
     },
     {
       "name": "harness.run",
@@ -61,20 +100,72 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "harness": { "type": "string" },
-          "transport": { "type": "string" },
-          "cwd": { "type": "string" },
-          "prompt": { "type": "string" },
-          "model": { "type": "string" },
-          "env": { "type": "object" },
+          "harness": {
+            "type": "string"
+          },
+          "transport": {
+            "type": "string"
+          },
+          "cwd": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "env": {
+            "type": "object"
+          },
           "agents": {},
-          "args": { "type": "array" },
-          "capabilities": { "type": "object" }
+          "args": {
+            "type": "array"
+          },
+          "capabilities": {
+            "type": "object"
+          }
         },
-        "required": ["harness", "transport", "cwd", "prompt"],
+        "required": [
+          "harness",
+          "transport",
+          "cwd",
+          "prompt"
+        ],
         "additionalProperties": false
       },
-      "run": { "type": "harness-run", "plugin": "work" }
+      "run": {
+        "type": "harness-run",
+        "plugin": "work"
+      }
+    },
+    {
+      "name": "work.check",
+      "description": "Check the work unit recorded by work.setup.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "work"
+      }
+    },
+    {
+      "name": "work.uninstall",
+      "description": "Delete the work folder under the self-hosted home. That folder holds the install, config, and state work.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
+        "plugin": "work"
+      }
     }
   ]
 }

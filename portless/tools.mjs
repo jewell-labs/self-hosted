@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { bridgeAddress, ensureForward, recordedProxy } from "./forward.mjs";
-import { caPath, dnsLabel, loadPolicy, localDevHost, prefixFor, readCheckout, stateDir, urlLines } from "./host.mjs";
+import { caPath, dnsLabel, loadPolicy, localDevHost, portRef, prefixFor, readCheckout, stateDir, urlLines } from "./host.mjs";
 
 const execFileAsync = promisify(execFile);
 const LABEL = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
@@ -23,7 +23,7 @@ export async function portlessStatus() {
       version: policy.version,
       installed: await binaryVersion(),
       proxy: policy.proxy,
-      guestPort: policy.guestPort,
+      services: policy.services.map((name) => portRef(name)),
       stateDir: stateDir(),
       caFile: caPath(),
       recordedProxy: recordedProxy(),

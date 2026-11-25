@@ -6,7 +6,8 @@
 , writeShellApplication
 , bash
 , coreutils
-, nodejs
+, txiki
+, syncio
 , repo
 }:
 { id
@@ -21,18 +22,20 @@
 , passthru ? { }
 }:
 let
-  inputs = [ bash coreutils nodejs ] ++ runtimeInputs;
+  inputs = [ bash coreutils txiki ] ++ runtimeInputs;
+  libExt = if stdenvNoCC.isDarwin then "dylib" else "so";
   preamble = ''
     repo=${repo}
-    export SELFHOST_STATE="''${SELFHOST_STATE:-$HOME/.self-hosted/state}"
     export SELFHOST_ROOT=$repo
-    mkdir -p "$SELFHOST_STATE"
+    export SELFHOST_RUN=$repo/bin/run.js
+    export SELFHOST_SYNCIO=${syncio}/lib/syncio.${libExt}
+    mkdir -p "$HOME/.self-hosted/${id}"
   '';
   setup = writeShellApplication {
     name = "selfhost-${id}-setup";
     runtimeInputs = inputs;
     text = preamble + ''
-      node "$repo/bin/setup.mjs" ${id}
+      ${txiki}/bin/tjs run "$SELFHOST_RUN" "$repo/bin/setup.mjs" ${id}
       ${setupBody}
     '';
   };
@@ -40,7 +43,7 @@ let
     name = "selfhost-${id}-check";
     runtimeInputs = inputs;
     text = preamble + (if checkBody == "" then ''
-      node "$repo/bin/check.mjs" ${id}
+      ${txiki}/bin/tjs run "$SELFHOST_RUN" "$repo/bin/check.mjs" ${id}
     '' else checkBody);
   };
 in

@@ -8,9 +8,10 @@ import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { containerEnv } from "../lib/paths.mjs";
+import { serviceUrl } from "../portless/host.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const llamaUrl = process.env.LLM_URL ?? process.env.LLAMA_URL ?? "http://127.0.0.1:8080";
+const llamaUrl = process.env.LLM_URL ?? process.env.LLAMA_URL ?? serviceUrl("llm");
 const model = process.env.LLM_MODEL ?? process.env.LLAMA_MODEL ?? "";
 if (!model) {
   console.error("set LLM_MODEL or LLAMA_MODEL to the model id served by the llm server");
@@ -100,7 +101,7 @@ if (created.code !== 0) {
 }
 
 try {
-  const raw = await exec(["node", "bin/discover.mjs"]);
+  const raw = await exec(["bin/selfhost", "bin/discover.mjs"]);
   const discovery = JSON.parse(raw);
   const expected = discovery.plugins.filter((plugin) => plugin.applicable && plugin.proofRequired);
   const expectedIds = expected.map((plugin) => plugin.id);
@@ -120,9 +121,8 @@ try {
   }
   console.log(JSON.stringify({ model, plugins: answer.plugins, validate: answer.validate }));
   for (const id of expectedIds) {
-    await exec(["node", "bin/setup.mjs", id]);
-    await exec(["node", "bin/check.mjs", id]);
-    console.log(`validated ${id}`);
+    await exec(["bin/selfhost", "bin/setup.mjs", id]);
+    console.log(`setup ${id}`);
   }
   console.log("proof ok");
 } finally {

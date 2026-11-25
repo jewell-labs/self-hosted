@@ -1,12 +1,8 @@
-import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { writeSyncInside } from "../lib/jail.mjs";
-import { homeDir } from "../lib/paths.mjs";
-import { createServer, connect as netConnect } from "node:net";
+import { connect as netConnect } from "node:net";
 import { networkInterfaces } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { loadPolicy, stateDir } from "./host.mjs";
+import { stateDir } from "./host.mjs";
 
 export function bridgeAddress(ifaces = networkInterfaces()) {
   for (const [name, addrs] of Object.entries(ifaces)) {
@@ -50,48 +46,10 @@ export function tcpOpen(host, port, timeoutMs = 400) {
   });
 }
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function ensureForward() {
   const address = bridgeAddress();
-  const { guestPort } = loadPolicy();
   if (!address) return { address: null, started: false };
-  if (await tcpOpen(address, guestPort)) return { address, started: false };
-  const child = spawn(process.execPath, [fileURLToPath(import.meta.url), "serve"], { detached: true, stdio: "ignore" });
-  child.on("error", () => undefined);
-  child.unref();
-  for (let i = 0; i < 20; i++) {
-    if (await tcpOpen(address, guestPort)) return { address, started: true };
-    await sleep(50);
-  }
-  return { address: null, started: false };
+  const proxy = recordedProxy();
+  if (!proxy || !(await tcpOpen("127.0.0.1", proxy.port))) return { address: null, started: false };
+  return { address, started: false };
 }
-
-function serve() {
-  const address = bridgeAddress();
-  if (!address) return;
-  const { guestPort } = loadPolicy();
-  const server = createServer((socket) => {
-    const proxy = recordedProxy();
-    const upstream = netConnect({ host: "127.0.0.1", port: proxy?.port ?? 443 });
-    socket.pipe(upstream);
-    upstream.pipe(socket);
-    const close = () => {
-      socket.destroy();
-      upstream.destroy();
-    };
-    socket.on("error", close);
-    upstream.on("error", close);
-    socket.on("close", () => upstream.destroy());
-  });
-  server.on("error", (error) => process.exit(error.code === "EADDRINUSE" ? 0 : 1));
-  server.listen(guestPort, address, () => {
-    try {
-      writeSyncInside(homeDir(), join(stateDir(), "guest-forward.pid"), String(process.pid));
-    } catch {
-      // The listener is up. The pid file is only a marker.
-    }
-  });
-}
-
-if (process.argv[1]?.endsWith("forward.mjs") && process.argv[2] === "serve") serve();

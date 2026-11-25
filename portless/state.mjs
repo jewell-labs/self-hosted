@@ -10,11 +10,10 @@ export async function writePortlessState(dir, home) {
   const unit = {
     version: policy.version,
     proxy: policy.proxy,
-    guestPort: policy.guestPort,
+    services: policy.services,
     stateDir: stateDir(home),
     caFile: caPath(home),
     bridge: bridgeAddress(),
-    appPortRange: policy.appPortRange,
   };
   await writeInside(homeDir(), join(dir, "portless.json"), `${JSON.stringify(unit, null, 2)}\n`);
   return unit;

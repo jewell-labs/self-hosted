@@ -2,7 +2,7 @@ import { doctor } from "../lib/doctor.mjs";
 
 const level = process.argv[2];
 if (process.argv.length > 3) {
-  console.error("usage: node bin/doctor.mjs [shape|mesh|repos|strict]");
+  console.error("usage: bin/selfhost bin/doctor.mjs [shape|mesh|repos|strict]");
   process.exit(2);
 }
 

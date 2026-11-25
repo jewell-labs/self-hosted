@@ -1,5 +1,6 @@
 import { readDecisionModels } from "../decision/registry.mjs";
 import { repoRoot } from "../lib/discover.mjs";
+import { eventLog, historyFilter, readEvents, reportEvals } from "../lib/events.mjs";
 import { alignResults, runIsolated } from "./isolate.mjs";
 import { evalUnit, selectedIds } from "./unit.mjs";
 
@@ -48,6 +49,13 @@ export async function evalSpec(args, env, ids) {
   };
 }
 
+function evalBody(model, token) {
+  const parts = [];
+  if (model) parts.push(model);
+  if (token && token !== model) parts.push(token);
+  return parts.join(" ").slice(0, 4096);
+}
+
 function publishEval(bus, name, detail, body) {
   if (!bus) return;
   const input = { plugin: "evals", type: "eval", name, detail };
@@ -71,8 +79,8 @@ export function evalsList() {
 export async function evalsRun(args, env = process.env, opts = {}) {
   const ids = selectedIds(args?.id);
   if (!ids) return { text: JSON.stringify({ ok: false, reason: "id" }), isError: true };
-  for (const id of ids) publishEval(opts.bus, id, "started");
   const spec = await evalSpec(args, env, ids);
+  for (const id of ids) publishEval(opts.bus, id, "started", spec.model);
   const isolate = opts.isolate ?? runIsolated;
   let outcome;
   try {
@@ -81,9 +89,14 @@ export async function evalsRun(args, env = process.env, opts = {}) {
     outcome = { isolated: false, results: ids.map((id) => ({ id, detail: "error", body: "container" })) };
   }
   const results = alignResults(ids, outcome?.results);
-  for (const result of results) publishEval(opts.bus, result.id, result.detail, result.body);
+  for (const result of results) publishEval(opts.bus, result.id, result.detail, evalBody(spec.model, result.body));
   return {
     text: JSON.stringify({ isolated: outcome?.isolated === true, results }),
     isError: results.some((result) => result.detail !== "ok"),
   };
+}
+
+export function evalsReport(env = process.env) {
+  const events = readEvents(eventLog(env), historyFilter({ plugin: "evals", type: "eval" }));
+  return { text: JSON.stringify(reportEvals(events)), isError: false };
 }

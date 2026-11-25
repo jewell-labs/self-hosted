@@ -1,0 +1,13 @@
+{
+  "version": "26.11.0",
+  "darwin": {
+    "arm64": {
+      "url": "https://github.com/saghul/txiki.js/releases/download/v26.11.0/txiki-macos-arm64.zip",
+      "sha256": "e5681ad614bb3fcee57a52f4e33127ae3f3564f5791dc640473b49ffec65ffcf"
+    },
+    "x64": {
+      "url": "https://github.com/saghul/txiki.js/releases/download/v26.11.0/txiki-macos-x86_64.zip",
+      "sha256": "6401e556e0dda08fb401fc3b81e7be612220a5085538254ed3f3675267937409"
+    }
+  }
+}

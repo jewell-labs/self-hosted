@@ -3,7 +3,7 @@ name: doctor
 description: Check this host's agent mesh, repos, Cloudflare files, and GitHub workflows.
 ---
 
-Call `doctor` before changing `.agents`, a plugin's `.agents`, or a workflow. Omit `level` for `strict`. `just doctor` is the same check from the shell. `just doctor shape` is the narrow level.
+Call `doctor` before changing `.agents`, a plugin's `.agents`, or a workflow. Omit `level` for `strict`. `shape` is the narrow level.
 
 `shape` checks this repo's catalog, tool declarations, skills, `home/policy.json`, and `events/event.json` plus each plugin webhook. Strict also checks that `~/.self-hosted` has only the allowed directories and no `node_modules`. `mesh` adds that MCP and LSP agree and that other repos' tools stay unexecuted. `repos` checks every checkout in `github-repos/config`. `strict` adds Cloudflare file layout, worker Access limits, and workflow runners.
 

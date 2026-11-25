@@ -1,9 +1,8 @@
-import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { accessConfig, verifyAccessJwt } from "../lib/access.mjs";
-import { createBus, EventError, formatSse, parseFilter } from "../lib/events.mjs";
+import { createBus, eventLog, EventError, formatSse, parseFilter } from "../lib/events.mjs";
 import { callTool, loadMesh, mcpTools, MeshError } from "../lib/mesh.mjs";
 
 const logDir = join(dirname(fileURLToPath(import.meta.url)), "../plugins/cloudflare/log-ui");
@@ -21,19 +20,26 @@ function bindIsLoopback(host) {
   return host === "127.0.0.1" || host === "::1" || host === "localhost";
 }
 
+function json(body, status = 200, extra = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json", "cache-control": "no-store", ...extra },
+  });
+}
+
 export function createMcpServer(env = process.env) {
   const access = accessConfig(env);
   const bindHost = env.BIND_HOST ?? "127.0.0.1";
-  const bus = createBus();
+  const bus = createBus({ file: eventLog(env) });
   if (!bindIsLoopback(bindHost) && !access.required) {
     throw new Error("refusing non-loopback bind without Cloudflare Access (set CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD)");
   }
 
-  function accessToken(req) {
-    const header = req.headers["cf-access-jwt-assertion"];
-    if (typeof header === "string" && header !== "") return header;
-    const raw = req.headers.cookie;
-    if (typeof raw !== "string") return "";
+  function accessToken(request) {
+    const header = request.headers.get("cf-access-jwt-assertion");
+    if (header) return header;
+    const raw = request.headers.get("cookie");
+    if (!raw) return "";
     for (const part of raw.split(";")) {
       const trimmed = part.trim();
       const eq = trimmed.indexOf("=");
@@ -47,115 +53,90 @@ export function createMcpServer(env = process.env) {
     return "";
   }
 
-  async function gate(req, res) {
+  async function gate(request) {
     if (!access.required) return { ok: true, jwtVerified: false };
-    const token = accessToken(req);
-    if (token === "") {
-      res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: "cloudflare access jwt required" }));
-      return { ok: false };
-    }
+    const token = accessToken(request);
+    if (token === "") return { ok: false, response: json({ error: "cloudflare access jwt required" }, 401) };
     try {
       await verifyAccessJwt(token, access, env);
       return { ok: true, jwtVerified: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: message }));
-      return { ok: false };
+      return { ok: false, response: json({ error: message }, 401) };
     }
   }
 
-  const server = createServer(async (req, res) => {
-    const url = new URL(req.url ?? "/", "http://127.0.0.1");
-    if (req.method === "GET" && url.pathname === "/healthz") {
-      res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
-      res.end(JSON.stringify({ ok: true, name: SERVER_NAME }));
-      return;
-    }
-    if (req.method === "GET" && (url.pathname === "/log" || logFiles.has(url.pathname))) {
-      const allowed = await gate(req, res);
-      if (!allowed.ok) return;
+  async function fetch(request) {
+    const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/healthz") return json({ ok: true, name: SERVER_NAME });
+    if (request.method === "GET" && (url.pathname === "/log" || logFiles.has(url.pathname))) {
+      const allowed = await gate(request);
+      if (!allowed.ok) return allowed.response;
       if (url.pathname === "/log") {
-        res.writeHead(302, { location: "/log/", "cache-control": "no-store" }).end();
-        return;
+        return new Response(null, { status: 302, headers: { location: "/log/", "cache-control": "no-store" } });
       }
       const [file, type] = logFiles.get(url.pathname);
       const body = await readFile(join(logDir, file));
-      res.writeHead(200, { "content-type": type, "cache-control": "no-store" });
-      res.end(body);
-      return;
+      return new Response(body, { status: 200, headers: { "content-type": type, "cache-control": "no-store" } });
     }
-    if (req.method === "GET" && url.pathname === "/events") {
-      const allowed = await gate(req, res);
-      if (!allowed.ok) return;
+    if (request.method === "GET" && url.pathname === "/events") {
+      const allowed = await gate(request);
+      if (!allowed.ok) return allowed.response;
       let filter;
       try {
-        const header = req.headers["last-event-id"];
-        filter = parseFilter(url.searchParams, Array.isArray(header) ? header[0] : header);
+        filter = parseFilter(url.searchParams, request.headers.get("last-event-id") ?? "");
       } catch (error) {
-        if (error instanceof EventError && !res.headersSent) {
-          res.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ error: error.message }));
-          return;
-        }
+        if (error instanceof EventError) return json({ error: error.message }, 400);
         throw error;
       }
-      let dropHarness = false;
-      const writeEvent = (event) => {
-        if (res.destroyed || res.writableEnded) {
-          subscription.close();
-          return;
-        }
-        if (dropHarness && event.type === "harness") return;
-        if (!res.write(formatSse(event))) dropHarness = true;
-      };
-      const subscription = bus.subscribe(filter, writeEvent);
-      res.writeHead(200, {
-        "content-type": "text/event-stream; charset=utf-8",
-        "cache-control": "no-store",
-        connection: "keep-alive",
+      let subscription;
+      const stream = new ReadableStream({
+        start(controller) {
+          const enc = new TextEncoder();
+          controller.enqueue(enc.encode(": open\n\n"));
+          subscription = bus.subscribe(filter, (event) => {
+            try {
+              controller.enqueue(enc.encode(formatSse(event)));
+            } catch {
+              subscription?.close();
+            }
+          });
+          for (const event of subscription.replay) controller.enqueue(enc.encode(formatSse(event)));
+        },
+        cancel() {
+          subscription?.close();
+        },
       });
-      res.flushHeaders();
-      res.socket?.setNoDelay(true);
-      res.write(": open\n\n");
-      for (const event of subscription.replay) writeEvent(event);
-      res.on("drain", () => {
-        dropHarness = false;
+      return new Response(stream, {
+        status: 200,
+        headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store" },
       });
-      res.on("close", () => subscription.close());
-      return;
     }
-    if (req.method !== "POST" || url.pathname !== "/mcp") {
-      res.writeHead(404).end();
-      return;
-    }
-    const allowed = await gate(req, res);
-    if (!allowed.ok) return;
-    const jwtVerified = allowed.jwtVerified;
+    if (request.method !== "POST" || url.pathname !== "/mcp") return new Response(null, { status: 404 });
+    const allowed = await gate(request);
+    if (!allowed.ok) return allowed.response;
     try {
-      const chunks = [];
-      for await (const chunk of req) chunks.push(chunk);
-      const raw = Buffer.concat(chunks).toString("utf8");
+      const raw = await request.text();
       const body = raw.length === 0 ? {} : JSON.parse(raw);
-      if (body.method === "notifications/initialized") {
-        res.writeHead(202).end();
-        return;
-      }
-      const result = await handleRpc(body.method, body.params ?? {}, { env, jwtVerified, bus });
-      res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
-      res.end(JSON.stringify({ jsonrpc: "2.0", id: body.id ?? null, result }));
+      if (body.method === "notifications/initialized") return new Response(null, { status: 202 });
+      const result = await handleRpc(body.method, body.params ?? {}, { env, jwtVerified: allowed.jwtVerified, bus });
+      return json({ jsonrpc: "2.0", id: body.id ?? null, result });
     } catch (error) {
-      if (error instanceof MeshError && error.status === 401 && !res.headersSent) {
-        res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: error.message }));
-        return;
-      }
+      if (error instanceof MeshError && error.status === 401) return json({ error: error.message }, 401);
       const message = error instanceof Error ? error.message : String(error);
-      if (!res.headersSent) {
-        res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32603, message } }));
-      }
+      return json({ jsonrpc: "2.0", id: null, error: { code: -32603, message } }, 500);
     }
-  });
+  }
 
-  return { server, bindHost, access, bus };
+  return {
+    bindHost,
+    access,
+    bus,
+    fetch,
+    listen(port, host) {
+      return tjs.serve({ fetch, port: Number(port), listenIp: host });
+    },
+  };
 }
 
 async function handleRpc(method, params, ctx) {
@@ -166,32 +147,27 @@ async function handleRpc(method, params, ctx) {
       serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
     };
   }
-  if (method === "tools/list") {
-    return { tools: mcpTools(await loadMesh(ctx.env)) };
-  }
-  if (method === "tools/call") {
-    return callTool(params.name, params.arguments ?? {}, ctx.env, { jwtVerified: ctx.jwtVerified, bus: ctx.bus });
-  }
+  if (method === "tools/list") return { tools: mcpTools(await loadMesh(ctx.env)) };
+  if (method === "tools/call") return callTool(params.name, params.arguments ?? {}, ctx.env, { jwtVerified: ctx.jwtVerified, bus: ctx.bus });
   throw new Error(`unsupported method ${method}`);
 }
 
 const entry = process.argv[1]?.replaceAll("\\", "/") ?? "";
 if (entry.endsWith("mcp/server.mjs")) {
   try {
-    const { server, bindHost, access } = createMcpServer();
-    const port = Number(process.env.PORT ?? 8473);
-    server.listen(port, bindHost, () => {
-      const address = server.address();
-      const realPort = typeof address === "object" && address ? address.port : port;
-      console.log(JSON.stringify({
-        ok: true,
-        name: SERVER_NAME,
-        version: SERVER_VERSION,
-        bind: bindHost,
-        port: realPort,
-        access: access.required ? "cloudflare-access" : "loopback-only",
-      }));
-    });
+    const mcp = createMcpServer();
+    const assigned = process.env.PORT ?? "";
+    const port = /^[0-9]+$/.test(assigned) ? Number(assigned) : 0;
+    const server = mcp.listen(port, mcp.bindHost);
+    console.log(JSON.stringify({
+      ok: true,
+      name: SERVER_NAME,
+      version: SERVER_VERSION,
+      bind: mcp.bindHost,
+      port: "port {mcp}",
+      listen: server.port,
+      access: mcp.access.required ? "cloudflare-access" : "loopback-only",
+    }));
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);

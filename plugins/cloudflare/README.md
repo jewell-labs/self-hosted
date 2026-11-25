@@ -8,8 +8,8 @@ One Access application. The log uses the same `CF_ACCESS_TEAM_DOMAIN` and `CF_AC
 
 `wrangler.jsonc` does not deploy and does not set `SELFHOST_LOG_DEV`. That variable is only for a local `wrangler dev`. Mesh calls publish to `SELFHOST_LOG_URL` with `detail` of `ok` or `error`. A failed publish does not fail the tool.
 
-The admin API token is the login keychain item service `cloudflare`, account `default`. `cloudflare.admin` reports that state and does not return the token. `just cloudflare-api METHOD PATH` calls `api.cloudflare.com` with it. `cloudflare.apply` is the same call through the mesh and needs a verified Access JWT. A JSON body is a file path. Responses drop token fields.
+The admin API token is the login keychain item service `cloudflare`, account `default`. `cloudflare.admin` reports that state and does not return the token. `cloudflare-api` calls `api.cloudflare.com` with it and needs a verified Access JWT. The token is not an argument. A JSON body is the request body. Responses drop token fields.
 
-If that item is absent or unusable, the user runs `just cloudflare-token` or calls `cloudflare.token`. The token is typed at a prompt and is not an argument.
+If that item is absent or unusable, the user calls `cloudflare-token`. The token is typed at a prompt and is not an argument.
 
-`just setup cloudflare` then `just check cloudflare`.
+Plugin setup is `cloudflare.setup`.

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "jewell-labs.self-hosted.event.v1",
   "title": "Event",
-  "description": "One event for every plugin webhook. type tool is a mesh tool finishing. type workflow is ci or clean. type harness is one line from a coding harness. type eval is one eval finishing. detail has no free text. body is a harness line or an eval token.",
+  "description": "One event for every plugin webhook. The log at logs/events.jsonl is the history. type tool is a mesh tool finishing. type workflow is ci or clean. type harness is one line from a coding harness. type eval is one eval finishing. detail has no free text. body is a harness line or a model and an eval token.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "at", "plugin", "type", "name", "detail"],

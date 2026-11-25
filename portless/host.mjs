@@ -58,6 +58,14 @@ export async function readCheckout(dir) {
   return { linked, branch: branch.stdout.trim(), directory: basename(path), path };
 }
 
+export function portRef(name) {
+  return `port {${name}}`;
+}
+
+export function serviceUrl(name) {
+  return `https://${name}.localhost`;
+}
+
 export function serviceHost(prefix, service) {
   return `${prefix}.${service}.localhost`;
 }
@@ -81,10 +89,9 @@ export function localDevUrl(value) {
 }
 
 export function urlLines(prefix, services, bridge) {
-  const policy = loadPolicy();
-  const lines = services.map((service) => `${service} https://${serviceHost(prefix, service)}`);
+  const lines = services.map((service) => `${portRef(service)} https://${serviceHost(prefix, service)}`);
   if (!bridge) return [...lines, "guest down"];
   const guest = services[0];
   const rule = services.map((service) => `MAP ${serviceHost(prefix, service)} ${bridge}`).join(", ");
-  return [...lines, `guest https://${serviceHost(prefix, guest)}:${policy.guestPort}`, `resolver ${rule}`];
+  return [...lines, `guest https://${serviceHost(prefix, guest)}`, `resolver ${rule}`];
 }

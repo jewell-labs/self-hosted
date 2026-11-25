@@ -17,7 +17,7 @@
     },
     {
       "name": "mcp.check",
-      "description": "Check the mcp unit against this host.",
+      "description": "Check the mcp unit recorded by mcp.setup.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -26,6 +26,20 @@
       },
       "run": {
         "type": "check",
+        "plugin": "mcp"
+      }
+    },
+    {
+      "name": "mcp.uninstall",
+      "description": "Delete the mcp folder under the self-hosted home. That folder holds the install, config, and state mcp.setup wrote.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
         "plugin": "mcp"
       }
     }

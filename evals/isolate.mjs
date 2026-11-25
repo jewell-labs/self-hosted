@@ -187,7 +187,7 @@ export async function runIsolated(spec, opts = {}) {
       ...Object.entries(env).flatMap(([key, value]) => ["-e", `${key}=${value}`]),
       "--mount", `type=bind,source=${spec.root},target=/src,readonly`,
       IMAGE,
-      "node", "evals/cli.mjs",
+      "bin/selfhost", "evals/cli.mjs",
     ], 180_000);
     const parsed = parseEvalOutput(child.stdout);
     if (!parsed) return missed(ids, "container");

@@ -4,17 +4,17 @@ import { pathToFileURL } from "node:url";
 import { buildDiscovery, repoRoot } from "../lib/discover.mjs";
 import { JailError, writeInside } from "../lib/jail.mjs";
 import { readHost } from "../lib/host.mjs";
-import { homeDir, layout } from "../lib/paths.mjs";
+import { homeDir, pluginDir } from "../lib/paths.mjs";
 
 const id = process.argv[2];
 if (!id) {
-  console.error("usage: node bin/setup.mjs <plugin>");
+  console.error("usage: bin/selfhost bin/setup.mjs <plugin>");
   process.exit(2);
 }
 
 const root = repoRoot();
 const home = homeDir();
-const stateDir = process.env.SELFHOST_STATE ?? layout().state;
+const stateDir = pluginDir(id);
 
 async function writeState(name, body) {
   try {

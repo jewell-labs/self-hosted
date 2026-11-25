@@ -1,5 +1,6 @@
 # Rendered by bin/setup.mjs into the host's ~/.self-hosted/sshd. Do not commit that directory.
-Port 2222
+# port {sshd}
+Port {{port}}
 ListenAddress 127.0.0.1
 HostKey {{dir}}/ssh_host_ed25519_key
 PidFile {{dir}}/sshd.pid
