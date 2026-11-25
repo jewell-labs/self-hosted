@@ -108,6 +108,45 @@ test("strict doctor fails on a real legacy store and passes after adopt moves it
   }
 });
 
+test("a prefix move updates the recorded home and a second install rewrites again", async () => {
+  const home = await mkdtemp(join(tmpdir(), "selfhost-prefix-"));
+  const root = join(home, ".self-hosted");
+  const copy = join(home, ".self-hosted-copy");
+  const third = join(home, "third");
+  const label = "com.jewell-labs.routines";
+  const agents = join(home, "Library/LaunchAgents");
+  await mkdir(agents, { recursive: true });
+  await writeFile(join(agents, `${label}.plist`), `<plist><string>${root}</string><string>${root}/logs/routines.log</string></plist>\n`);
+  try {
+    const moved = run("bin/adopt.mjs", [], baseEnv(home, root));
+    assert.equal(moved.status, 0, moved.stderr);
+    await cp(root, copy, { recursive: true });
+    const adopted = run("bin/adopt.mjs", [], baseEnv(home, copy));
+    assert.equal(adopted.status, 0, adopted.stderr);
+    assert.equal(JSON.parse(await readFile(join(copy, "launchd/labels.json"), "utf8")).home, root);
+    const install = run("bin/adopt.mjs", ["--install-agents"], baseEnv(home, copy));
+    assert.equal(install.status, 0, install.stderr);
+    const first = await readFile(join(agents, `${label}.plist`), "utf8");
+    assert.equal(first.includes(`<string>${copy}</string>`), true);
+    assert.equal(first.includes(`<string>${copy}/logs/routines.log</string>`), true);
+    assert.equal(JSON.parse(await readFile(join(copy, "launchd/labels.json"), "utf8")).home, copy);
+
+    await cp(copy, third, { recursive: true });
+    const adoptedAgain = run("bin/adopt.mjs", [], baseEnv(home, third));
+    assert.equal(adoptedAgain.status, 0, adoptedAgain.stderr);
+    assert.equal(JSON.parse(await readFile(join(third, "launchd/labels.json"), "utf8")).home, copy);
+    const again = run("bin/adopt.mjs", ["--install-agents"], baseEnv(home, third));
+    assert.equal(again.status, 0, again.stderr);
+    const plist = await readFile(join(agents, `${label}.plist`), "utf8");
+    assert.equal(plist.includes(`<string>${third}</string>`), true);
+    assert.equal(plist.includes(`<string>${third}/logs/routines.log</string>`), true);
+    assert.equal(plist.includes(copy), false);
+    assert.equal(JSON.parse(await readFile(join(third, "launchd/labels.json"), "utf8")).home, third);
+  } finally {
+    await rm(home, { recursive: true, force: true });
+  }
+});
+
 test("a copied home reports the same stores on two discover and doctor runs", async () => {
   const user = await mkdtemp(join(tmpdir(), "selfhost-user-"));
   const prepared = join(user, "prepared");
