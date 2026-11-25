@@ -61,7 +61,7 @@ test("strict doctor fails on a real legacy store and passes after adopt moves it
   const label = "com.jewell-labs.routines";
   const agents = join(home, "Library/LaunchAgents");
   await mkdir(agents, { recursive: true });
-  await writeFile(join(agents, `${label}.plist`), `<plist><string>${root}/logs/routines.log</string></plist>\n`);
+  await writeFile(join(agents, `${label}.plist`), `<plist><string>${root}</string><string>${root}/logs/routines.log</string></plist>\n`);
   const env = baseEnv(home, root, { SELFHOST_SECURITY: stub });
   let relocated;
   try {
@@ -91,11 +91,17 @@ test("strict doctor fails on a real legacy store and passes after adopt moves it
     relocated = await mkdtemp(join(tmpdir(), "selfhost-reloc-user-"));
     const copy = join(relocated, "relocated");
     await cp(root, copy, { recursive: true });
+    const again = run("bin/adopt.mjs", [], baseEnv(relocated, copy));
+    assert.equal(again.status, 0, again.stderr);
+    const kept = JSON.parse(await readFile(join(copy, "launchd/labels.json"), "utf8"));
+    assert.equal(kept.home, root);
     const install = run("bin/adopt.mjs", ["--install-agents"], baseEnv(relocated, copy));
     assert.equal(install.status, 0, install.stderr);
     const plist = await readFile(join(relocated, "Library/LaunchAgents", `${label}.plist`), "utf8");
-    assert.match(plist, new RegExp(copy));
+    assert.equal(plist.includes(`<string>${copy}</string>`), true);
+    assert.equal(plist.includes(`<string>${copy}/logs/routines.log</string>`), true);
     assert.equal(plist.includes(root), false);
+    assert.equal(JSON.parse(await readFile(join(copy, "launchd/labels.json"), "utf8")).home, copy);
   } finally {
     await rm(home, { recursive: true, force: true });
     if (relocated) await rm(relocated, { recursive: true, force: true });
@@ -166,5 +172,39 @@ test("proof setup and check use a temporary home", async () => {
     }, before);
   } finally {
     await rm(home, { recursive: true, force: true });
+  }
+});
+
+test("ghref install records its agent and a later adopt installs the moved plist", async () => {
+  const home = await mkdtemp(join(tmpdir(), "selfhost-ghref-"));
+  const root = join(home, ".self-hosted");
+  const stub = join(home, "stub-bin");
+  await mkdir(stub, { recursive: true });
+  await writeFile(join(stub, "launchctl"), "#!/bin/sh\nexit 0\n");
+  await chmod(join(stub, "launchctl"), 0o755);
+  const env = baseEnv(home, root, { PATH: `${stub}:${process.env.PATH}` });
+  let relocated;
+  try {
+    const installed = spawnSync("bash", [join(repo, "github-repos/ghref"), "install"], { env, encoding: "utf8" });
+    assert.equal(installed.status, 0, installed.stderr);
+    const recorded = JSON.parse(await readFile(join(root, "launchd/labels.json"), "utf8"));
+    assert.equal(recorded.home, root);
+    assert.equal(recorded.agents.includes("local.ghref"), true);
+    assert.equal((await readFile(join(root, "launchd/agents/local.ghref.plist"), "utf8")).includes(`${root}/logs/ghref.log`), true);
+
+    relocated = await mkdtemp(join(tmpdir(), "selfhost-ghref-user-"));
+    const copy = join(relocated, "relocated");
+    await cp(root, copy, { recursive: true });
+    const adopted = run("bin/adopt.mjs", [], baseEnv(relocated, copy));
+    assert.equal(adopted.status, 0, adopted.stderr);
+    assert.equal(JSON.parse(await readFile(join(copy, "launchd/labels.json"), "utf8")).home, root);
+    const restored = run("bin/adopt.mjs", ["--install-agents"], baseEnv(relocated, copy));
+    assert.equal(restored.status, 0, restored.stderr);
+    const plist = await readFile(join(relocated, "Library/LaunchAgents/local.ghref.plist"), "utf8");
+    assert.equal(plist.includes(`${copy}/logs/ghref.log`), true);
+    assert.equal(plist.includes(root), false);
+  } finally {
+    await rm(home, { recursive: true, force: true });
+    if (relocated) await rm(relocated, { recursive: true, force: true });
   }
 });

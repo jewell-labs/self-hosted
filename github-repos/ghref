@@ -112,9 +112,12 @@ case ${1:-sync} in
     echo "ready: $dir" ;;
   install)
     write_plist
-    mkdir -p "$HOST/launchd/agents" "${BIN%/*}"
-    cp "$PLIST" "$HOST/launchd/agents/$LABEL.plist"
+    mkdir -p "${BIN%/*}"
     ln -sfn "$ROOT/ghref" "$BIN"
+    (
+      cd "$ROOT/.." && SELFHOST_AGENT_LABEL="$LABEL" SELFHOST_AGENT_FILE="$PLIST" \
+        node --input-type=module -e 'import { readFileSync } from "node:fs"; import { saveAgent } from "./lib/launchd.mjs"; saveAgent(process.env, process.env.SELFHOST_AGENT_LABEL, readFileSync(process.env.SELFHOST_AGENT_FILE, "utf8"));'
+    )
     launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
     launchctl bootstrap "gui/$(id -u)" "$PLIST"
     echo "scheduled every ${interval}s from $ROOT/ghref; log: $LOG" ;;
