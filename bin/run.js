@@ -1,6 +1,6 @@
 import { initArgv, process } from "../runtime/node/process.js";
 import { Buffer } from "../runtime/node/buffer.js";
-import { dirname, resolve } from "../runtime/node/path.js";
+import { dirname, isAbsolute, resolve } from "../runtime/node/path.js";
 import { fileURLToPath, pathToFileURL } from "../runtime/node/url.js";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -12,7 +12,7 @@ if (!scriptArg) {
 }
 globalThis.process = process;
 globalThis.Buffer = Buffer;
-const script = resolve(scriptArg);
+const script = isAbsolute(scriptArg) ? resolve(scriptArg) : resolve(root, scriptArg);
 initArgv(script, args.slice(4));
 if (!process.env.SELFHOST_RUN) process.env.SELFHOST_RUN = fileURLToPath(import.meta.url);
 if (typeof queueMicrotask !== "function") {
