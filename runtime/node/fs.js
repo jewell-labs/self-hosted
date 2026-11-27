@@ -78,6 +78,11 @@ export function writeFileSync(path, data, options) {
   if (typeof mode === "number") check(io.sh_chmod(file, mode), file);
 }
 
+export function chmodSync(path, mode) {
+  const file = String(path);
+  check(io.sh_chmod(file, Number(mode)), file);
+}
+
 export function appendFileSync(path, data) {
   writeFileSync(path, data, { flag: "a" });
 }

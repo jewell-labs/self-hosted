@@ -203,9 +203,9 @@ function runAsync(command, args, options) {
       if (timer) clearTimeout(timer);
       const outBytes = Buffer.concat(stdout);
       const errBytes = Buffer.concat(stderr);
-      const encoding = options.encoding && options.encoding !== "buffer" ? options.encoding : null;
-      const out = encoding ? outBytes.toString(encoding) : outBytes;
-      const err = encoding ? errBytes.toString(encoding) : errBytes;
+      const encoding = options.encoding === undefined ? "utf8" : options.encoding;
+      const out = encoding && encoding !== "buffer" ? outBytes.toString(encoding) : outBytes;
+      const err = encoding && encoding !== "buffer" ? errBytes.toString(encoding) : errBytes;
       const max = options.maxBuffer;
       if (!error && typeof max === "number" && (outBytes.length > max || errBytes.length > max)) {
         error = new Error("maxBuffer");
