@@ -32,8 +32,8 @@ test("tunnel plist points at the script and does not carry the token", () => {
 });
 
 test("guest argv is the harness check", () => {
-  const job = guestJob({ SELFHOST_NODE: "/usr/local/bin/node" }, "/self-hosted");
-  assert.deepEqual(containerArgv(job), ["/usr/local/bin/node", "/self-hosted/bin/doctor.mjs", "shape"]);
+  const job = guestJob({}, "/self-hosted");
+  assert.deepEqual(containerArgv(job), ["/bin/sh", "/self-hosted/bin/selfhost", "bin/doctor.mjs", "shape"]);
   const plist = renderPlist(job);
   assert.match(plist, /<key>SuccessfulExit<\/key>\s*<false\/>/);
 });
