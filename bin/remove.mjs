@@ -1,7 +1,10 @@
 // Delete one plugin's folder. Setup writes only there, so this removes the install.
+// Paths listed in that plugin's cleanup.json stay. nuke uses the same files.
 import { execFileSync } from "node:child_process";
 import { lstatSync, readlinkSync, readdirSync, realpathSync, rmSync, unlinkSync } from "node:fs";
-import { join, resolve, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { keepRelPaths, relation, removeSpared } from "../lib/cleanup.mjs";
 import { buildDiscovery } from "../lib/discover.mjs";
 import { homeDir, pluginDir, userHome } from "../lib/paths.mjs";
 
@@ -15,6 +18,15 @@ const known = buildDiscovery().plugins.some((plugin) => plugin.id === id);
 if (!known) {
   console.error(`unknown plugin ${id}`);
   process.exit(2);
+}
+
+const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
+let keep = [];
+try {
+  keep = keepRelPaths(repo);
+} catch (error) {
+  console.error(error.message ?? String(error));
+  process.exit(1);
 }
 
 const home = resolve(homeDir());
@@ -39,10 +51,22 @@ if (info.isSymbolicLink()) {
   process.exit(2);
 }
 const canon = realpathSync(dir);
-rmSync(dir, { recursive: true, force: true });
+const kind = relation(id, keep);
+if (kind === "keep") {
+  console.log(`kept ${dir}`);
+  process.exit(0);
+}
+if (kind === "ancestor") removeSpared(dir, id, keep);
+else rmSync(dir, { recursive: true, force: true });
 
 function inside(path) {
   return path === dir || path === canon || path.startsWith(`${dir}${sep}`) || path.startsWith(`${canon}${sep}`);
+}
+
+function keptTarget(target) {
+  const rel = relative(home, target);
+  if (rel.startsWith("..") || rel === "") return false;
+  return relation(rel.split(sep).join("/"), keep) === "keep";
 }
 
 function accountUid() {
@@ -83,7 +107,7 @@ function dropLinks(parent, agents) {
     }
     if (!stat.isSymbolicLink()) continue;
     const target = resolve(parent, readlinkSync(path));
-    if (!inside(target)) continue;
+    if (!inside(target) || keptTarget(target)) continue;
     if (agents) bootout(name);
     unlinkSync(path);
   }
@@ -91,4 +115,6 @@ function dropLinks(parent, agents) {
 
 dropLinks(join(home, "bin"), false);
 dropLinks(join(userHome(), "Library", "LaunchAgents"), true);
-console.log(`removed ${dir}`);
+const spared = keep.filter((item) => item === id || item.startsWith(`${id}/`));
+if (spared.length > 0) console.log(`removed ${dir} kept ${spared.join(", ")}`);
+else console.log(`removed ${dir}`);

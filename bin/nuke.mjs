@@ -1,17 +1,19 @@
 // Remove this account's self-hosted install.
-// Default keeps the GGUF library, Apple container images, the llm and decision
-// server homes, and the agent-desktop sandbox.
+// Each plugin's cleanup.json lists the paths this keeps.
 // --all removes those too.
 // SELFHOST_HOME, SELFHOST_LAUNCHCTL, and SELFHOST_LAUNCHD_DOMAIN are for tests.
 import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, readFileSync, readlinkSync, readdirSync, rmSync, unlinkSync } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
-import { KEEP, MANAGED_LABELS, homeDir, layout, userHome } from "../lib/paths.mjs";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { keepRelPaths, relation, removeSpared } from "../lib/cleanup.mjs";
+import { MANAGED_LABELS, layout, userHome } from "../lib/paths.mjs";
 
 const all = process.argv.includes("--all");
 const user = userHome();
 const paths = layout();
 const root = resolve(paths.root);
+const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const launchctl = process.env.SELFHOST_LAUNCHCTL ?? "launchctl";
 
 function die(message, code = 1) {
@@ -84,7 +86,18 @@ function inside(path, parent) {
   return abs === dir || abs.startsWith(`${dir}${sep}`);
 }
 
-function removeLink(entry) {
+function homeRel(path) {
+  const rel = relative(root, resolve(path));
+  if (rel.startsWith("..") || rel === "") return "";
+  return rel.split(sep).join("/");
+}
+
+function targetKept(target, keep) {
+  const rel = homeRel(target);
+  return rel !== "" && relation(rel, keep) === "keep";
+}
+
+function removeLink(entry, keep) {
   let stat;
   try {
     stat = lstatSync(entry.path);
@@ -99,7 +112,7 @@ function removeLink(entry) {
     return;
   }
   if (!inside(target, root)) return;
-  if (!all && KEEP.some((name) => inside(target, join(root, name)))) return;
+  if (targetKept(target, keep)) return;
   unlinkSync(entry.path);
 }
 
@@ -132,15 +145,6 @@ function removeBins() {
   }
 }
 
-function removeChildren() {
-  if (!existsSync(root)) return;
-  for (const name of readdirSync(root)) {
-    if (!all && KEEP.includes(name)) continue;
-    rmSync(join(root, name), { recursive: true, force: true });
-  }
-  if (all) rmSync(root, { recursive: true, force: true });
-}
-
 function stillLoaded(label) {
   try {
     execFileSync(launchctl, ["print", `${domain()}/${label}`], { stdio: "ignore" });
@@ -151,7 +155,7 @@ function stillLoaded(label) {
   }
 }
 
-function assertClean(managed, links) {
+function assertClean(managed, links, keep) {
   const problems = [];
   for (const label of managed) {
     const plist = join(user, "Library/LaunchAgents", `${label}.plist`);
@@ -159,11 +163,22 @@ function assertClean(managed, links) {
     if (stillLoaded(label)) problems.push(`still loaded: ${label}`);
   }
   if (existsSync(root)) {
-    const left = readdirSync(root).sort();
-    const allowed = all ? [] : [...KEEP].sort();
-    for (const name of left) {
-      if (!allowed.includes(name)) problems.push(`left behind: ${name}`);
-    }
+    const walk = (dir, rel) => {
+      const kind = relation(rel, keep);
+      if (kind === "drop") {
+        problems.push(`left behind: ${rel || root}`);
+        return;
+      }
+      if (kind === "keep") return;
+      let names = [];
+      try {
+        names = readdirSync(dir);
+      } catch {
+        return;
+      }
+      for (const name of names) walk(join(dir, name), rel ? `${rel}/${name}` : name);
+    };
+    walk(root, "");
   }
   for (const entry of links) {
     let stat;
@@ -176,7 +191,7 @@ function assertClean(managed, links) {
     try {
       const target = linkTarget(entry.path);
       if (!inside(target, root)) continue;
-      if (!all && KEEP.some((name) => inside(target, join(root, name)))) continue;
+      if (targetKept(target, keep)) continue;
       problems.push(`symlink still present: ${entry.path}`);
     } catch {
       problems.push(`symlink still present: ${entry.path}`);
@@ -186,12 +201,20 @@ function assertClean(managed, links) {
 }
 
 assertSafeRoot();
+let keep = [];
+if (!all) {
+  try {
+    keep = keepRelPaths(repo);
+  } catch (error) {
+    die(error.message ?? String(error));
+  }
+}
 const managed = labels();
 const links = recordedLinks();
 for (const label of managed) bootout(label);
-for (const entry of links) removeLink(entry);
+for (const entry of links) removeLink(entry, keep);
 removeBins();
-removeChildren();
-assertClean(managed, links);
+if (existsSync(root)) removeSpared(root, "", keep);
+assertClean(managed, links, keep);
 if (all) console.log("clean. removed ~/.self-hosted");
-else console.log(`clean. kept: ${KEEP.join(", ")}`);
+else console.log(`clean. kept: ${keep.join(", ")}`);

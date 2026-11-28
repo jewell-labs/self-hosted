@@ -1,9 +1,13 @@
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { realInside } from "../lib/jail.mjs";
+import { homeDir } from "../lib/paths.mjs";
 import { selectLlmProfile } from "../lib/profiles.mjs";
 import { portRef } from "../portless/host.mjs";
 
 export async function setup(ctx) {
+  const library = await realInside(homeDir(), ctx.host.llmModels);
+  await mkdir(library, { recursive: true });
   const profile = selectLlmProfile(ctx.host);
   const rendered = {
     profile: profile.id,

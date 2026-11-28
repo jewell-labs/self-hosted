@@ -1,5 +1,5 @@
 // Record the llm server plist inside ~/.self-hosted/llm. This does not install a LaunchAgent.
-// Weights stay in the shared library. The log stays in the llm folder.
+// Weights stay in this plugin's library. The log stays in the llm folder.
 // Usage: bin/selfhost bin/install-darwin-llama.mjs
 import { join } from "node:path";
 import { JailError, realInsideSync, writeSyncInside } from "../lib/jail.mjs";

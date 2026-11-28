@@ -41,10 +41,10 @@ async function fixture(stuck) {
   const home = await mkdtemp(join(tmpdir(), "selfhost-nuke-"));
   const root = join(home, ".self-hosted");
   const agents = join(home, "Library/LaunchAgents");
-  await mkdir(join(root, "models/gguf"), { recursive: true });
+  await mkdir(join(root, "llm/models/gguf"), { recursive: true });
+  await mkdir(join(root, "llm/logs"), { recursive: true });
   await mkdir(join(root, "agent-desktop/sandbox"), { recursive: true });
   await mkdir(join(root, "containers/kernels"), { recursive: true });
-  await mkdir(join(root, "llm"), { recursive: true });
   await mkdir(join(root, "decision"), { recursive: true });
   await mkdir(join(root, "state"), { recursive: true });
   await mkdir(join(root, "cloudflared"), { recursive: true });
@@ -59,11 +59,12 @@ async function fixture(stuck) {
   await mkdir(join(home, "Library/Logs"), { recursive: true });
   await mkdir(join(home, ".local/bin"), { recursive: true });
   await mkdir(join(home, "local"), { recursive: true });
-  await writeFile(join(root, "models/gguf/weight.gguf"), "keep-weight");
+  await writeFile(join(root, "llm/models/gguf/weight.gguf"), "keep-weight");
+  await writeFile(join(root, "llm/logs/session.log"), "remove-log");
+  await writeFile(join(root, "llm/marker"), "remove-llm-state");
   await writeFile(join(root, "agent-desktop/sandbox/marker"), "keep-sandbox");
   await writeFile(join(root, "containers/kernels/marker"), "keep-container");
-  await writeFile(join(root, "llm/marker"), "keep-llm");
-  await writeFile(join(root, "decision/marker"), "keep-decision");
+  await writeFile(join(root, "decision/marker"), "remove-decision");
   await writeFile(join(root, "state/host.json"), "remove-me");
   await writeFile(join(root, "cloudflared/token"), "not-a-real-token", { mode: 0o600 });
   await writeFile(join(root, "sshd/ssh_host_ed25519_key"), "not-a-real-key");
@@ -74,13 +75,13 @@ async function fixture(stuck) {
   await symlink(join(root, "state/host.json"), join(root, "state/linked-outside"));
   await writeFile(join(home, ".local/bin/cloudflared-tunnel"), "#!/bin/sh\nexec cloudflared tunnel --no-autoupdate run --token-file \"$HOME/.cloudflared/token\"\n");
   await symlink(join(root, "bin/ghref"), join(home, ".local/bin/ghref"));
-  await symlink(join(root, "models"), join(home, "local/models"));
+  await symlink(join(root, "llm/models"), join(home, "local/models"));
   await symlink(join(root, "agent-desktop"), join(home, ".agent-desktop"));
   await symlink(join(root, "cloudflared"), join(home, ".cloudflared"));
   await symlink(join(root, "logs/ghref.log"), join(home, "Library/Logs/ghref.log"));
   await symlink(join(home, "outside.txt"), join(home, "unrelated"));
   const recorded = [
-    { path: join(home, "local/models"), target: join(root, "models") },
+    { path: join(home, "local/models"), target: join(root, "llm/models") },
     { path: join(home, ".agent-desktop"), target: join(root, "agent-desktop") },
     { path: join(home, ".cloudflared"), target: join(root, "cloudflared") },
     { path: join(home, "Library/Logs/ghref.log"), target: join(root, "logs/ghref.log") },
@@ -121,12 +122,13 @@ test("just nuke keeps weights and the sandbox and clears launch agents", async (
   try {
     const result = run(home, []);
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /clean/);
-    assert.equal(await readFile(join(root, "models/gguf/weight.gguf"), "utf8"), "keep-weight");
+    assert.match(result.stdout, /clean\. kept: agent-desktop, containers, llm\/models/);
+    assert.equal(await readFile(join(root, "llm/models/gguf/weight.gguf"), "utf8"), "keep-weight");
     assert.equal(await readFile(join(root, "agent-desktop/sandbox/marker"), "utf8"), "keep-sandbox");
     assert.equal(await readFile(join(root, "containers/kernels/marker"), "utf8"), "keep-container");
-    assert.equal(await readFile(join(root, "llm/marker"), "utf8"), "keep-llm");
-    assert.equal(await readFile(join(root, "decision/marker"), "utf8"), "keep-decision");
+    await assert.rejects(lstat(join(root, "llm/marker")));
+    await assert.rejects(lstat(join(root, "llm/logs")));
+    await assert.rejects(lstat(join(root, "decision")));
     await assert.rejects(lstat(join(root, "state")));
     await assert.rejects(lstat(join(root, "cloudflared")));
     await assert.rejects(lstat(join(root, "github")));
@@ -143,7 +145,8 @@ test("just nuke keeps weights and the sandbox and clears launch agents", async (
     assert.equal(await readFile(join(home, "important/keep.txt"), "utf8"), "real-directory");
     assert.equal(await readFile(join(home, "outside.txt"), "utf8"), "leave-me");
     assert.equal((await lstat(join(home, "unrelated"))).isSymbolicLink(), true);
-    assert.deepEqual((await readdir(root)).sort(), ["agent-desktop", "containers", "decision", "llm", "models"]);
+    assert.deepEqual((await readdir(root)).sort(), ["agent-desktop", "containers", "llm"]);
+    assert.deepEqual(await readdir(join(root, "llm")), ["models"]);
     const calls = await readFile(log, "utf8");
     for (const label of labels) {
       assert.match(calls, new RegExp(`bootout gui/501/${label}`));
@@ -153,7 +156,7 @@ test("just nuke keeps weights and the sandbox and clears launch agents", async (
     assert.equal(loaded.trim(), "");
     const again = run(home, []);
     assert.equal(again.status, 0, again.stderr);
-    assert.equal(await readFile(join(root, "models/gguf/weight.gguf"), "utf8"), "keep-weight");
+    assert.equal(await readFile(join(root, "llm/models/gguf/weight.gguf"), "utf8"), "keep-weight");
   } finally {
     await rm(home, { recursive: true, force: true });
   }
@@ -167,7 +170,7 @@ test("nuke fails while a managed label is still loaded", async () => {
     assert.match(result.stderr, /still loaded: com.jewell-labs.llama-server/);
     assert.match(result.stderr, /still loaded: local.ghref/);
     await assert.rejects(lstat(join(home, "Library/LaunchAgents/local.ghref.plist")));
-    assert.equal(await readFile(join(home, ".self-hosted/models/gguf/weight.gguf"), "utf8"), "keep-weight");
+    assert.equal(await readFile(join(home, ".self-hosted/llm/models/gguf/weight.gguf"), "utf8"), "keep-weight");
   } finally {
     await rm(home, { recursive: true, force: true });
   }

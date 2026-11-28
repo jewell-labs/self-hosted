@@ -10,8 +10,8 @@ in
     enable = lib.mkEnableOption "the self-hosted llm server";
     modelsDir = lib.mkOption {
       type = lib.types.str;
-      default = "/var/lib/self-hosted/models/gguf";
-      description = "Shared GGUF library. The decision router reads this same directory.";
+      default = "/var/lib/self-hosted/llm/models/gguf";
+      description = "GGUF library owned by the llm plugin. The decision router reads this same directory.";
     };
   };
 

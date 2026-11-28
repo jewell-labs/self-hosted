@@ -14,9 +14,9 @@ The `cloudflare` plugin owns Access, the shared service token, and the log. One 
 
 ## Do not
 
-- Commit a token, key, registration token, or Access private key. Weights, Apple container images, and the agent-desktop sandbox stay in `~/.self-hosted`. `nuke` removes the rest and checks that the LaunchAgents are gone. `nuke-all` removes models, llm, decision, containers, and agent-desktop too.
+- Commit a token, key, registration token, or Access private key. Weights, Apple container images, and the agent-desktop sandbox stay in `~/.self-hosted`. Each plugin lists what `nuke` keeps in its `cleanup.json`. `nuke` removes the rest and checks that the LaunchAgents are gone. `nuke-all` removes the kept paths too.
 - Install `actions-runner` on a public repository. The setup exits 1 unless `ALLOW_PUBLIC_REPO_RUNNER=1`.
-- Copy a GGUF into a second directory. `llm` and `decision` both read `~/.self-hosted/models/gguf`. The decision router stays its own process.
+- Copy a GGUF into a second directory. The llm plugin owns `~/.self-hosted/llm/models/gguf`. `decision` reads that same directory. The decision router stays its own process.
 - Write a self-hosted file outside `~/.self-hosted`. `home/policy.json` is the allowed list, the disk reserve, and the probe text.
 - Treat the macOS llm LaunchAgent as the Linux install. Linux uses the profile discover rendered.
 - Put a repo name or a sync interval anywhere except `github-repos/config`.
