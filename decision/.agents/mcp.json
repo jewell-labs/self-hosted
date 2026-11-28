@@ -144,7 +144,7 @@
     },
     {
       "name": "decision.sample",
-      "description": "Run the two short probes from home/policy.json on one decision model and at most two others. Does not start the router.",
+      "description": "Run the two short probes from core/home/policy.json on one decision model and at most two others. Does not start the router.",
       "destructive": false,
       "inputSchema": {
         "type": "object",

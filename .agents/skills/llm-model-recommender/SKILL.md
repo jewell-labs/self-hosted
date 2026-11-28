@@ -3,7 +3,7 @@ name: llm-model-recommender
 description: Recommend at most one llm weight, sample it against the fleet, and keep or remove it.
 ---
 
-Call `llm.models`, `llm.usage`, and `llm.config` before choosing. `home/policy.json` is the disk reserve and the probe text. Read a current public leaderboard and record its URL and the date. Do not invent a score.
+Call `llm.models`, `llm.usage`, and `llm.config` before choosing. `core/home/policy.json` is the disk reserve and the probe text. Read a current public leaderboard and record its URL and the date. Do not invent a score.
 
 Recommend at most one GGUF that fits `freeBytes - reserveBytes` and this host's `llmProfile`. Download it with `llm.download` from a Hugging Face `org/name` only.
 

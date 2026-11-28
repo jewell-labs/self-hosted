@@ -1,0 +1,33 @@
+{
+  "id": "containers",
+  "summary": "Apple container images, kernels, and volumes. The store is ~/.self-hosted/containers.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    },
+    {
+      "path": ".",
+      "scope": "home",
+      "kind": "store"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

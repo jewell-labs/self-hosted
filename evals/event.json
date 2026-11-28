@@ -3,6 +3,10 @@
   "plugin": "evals",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {

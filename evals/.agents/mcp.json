@@ -52,7 +52,7 @@
     },
     {
       "name": "evals.report",
-      "description": "Report how models are doing from the eval events. The live routine keeps writing those events.",
+      "description": "Report how models are doing from the eval events.",
       "destructive": false,
       "inputSchema": {
         "type": "object",

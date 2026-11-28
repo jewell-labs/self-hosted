@@ -3,6 +3,10 @@
   "plugin": "llm",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {

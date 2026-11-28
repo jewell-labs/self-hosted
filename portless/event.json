@@ -3,6 +3,10 @@
   "plugin": "portless",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {

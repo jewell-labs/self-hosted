@@ -1,0 +1,28 @@
+{
+  "id": "sshd",
+  "summary": "Userland sshd on port {sshd}. Passwords off. Trusts a Cloudflare Access SSH CA that stays outside git.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

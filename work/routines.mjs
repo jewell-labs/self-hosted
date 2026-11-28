@@ -1,19 +1,12 @@
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { repoRoot } from "../lib/discover.mjs";
-import { layout } from "../lib/paths.mjs";
-import { serviceUrl } from "../portless/host.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
+import { layout } from "../core/lib/paths.mjs";
+import { serviceUrl } from "../core/lib/ports.mjs";
+import { due } from "../core/lib/schedule.mjs";
 import { cleanWork } from "./store.mjs";
 
-const EVERY = { "1h": 60 * 60 * 1000, "1d": 24 * 60 * 60 * 1000, "3d": 3 * 24 * 60 * 60 * 1000 };
-
-export function due(every, last, now) {
-  const span = EVERY[every];
-  if (!span) throw new Error(`unknown every ${every}`);
-  if (!last) return true;
-  const then = Date.parse(last);
-  return Number.isFinite(then) && now - then >= span;
-}
+export { due };
 
 async function emit(env, detail) {
   const body = {
@@ -36,9 +29,9 @@ async function emit(env, detail) {
 }
 
 export async function tick(env = process.env, now = Date.now()) {
-  const root = env.SELFHOST_ROOT ?? repoRoot();
+  const repo = env.SELFHOST_ROOT ?? repoRoot();
   const paths = layout(env);
-  const routine = JSON.parse(await readFile(join(root, ".agents/routines/clean-work.json"), "utf8"));
+  const routine = JSON.parse(await readFile(join(repo, ".agents/routines/clean-work.json"), "utf8"));
   if (routine.id !== "clean-work" || routine.every !== "1d" || routine.workflow !== "clean") {
     throw new Error("clean-work routine does not match");
   }

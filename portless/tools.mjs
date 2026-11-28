@@ -43,7 +43,7 @@ export async function portlessUrls(args, env) {
   if (!prefix && typeof args.repo === "string") {
     if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(args.repo)) return { text: "repo must be owner/name", isError: true };
     const { join } = await import("node:path");
-    const { layout } = await import("../lib/paths.mjs");
+    const { layout } = await import("../core/lib/paths.mjs");
     const root = join(env.GHREF_REF ?? layout(env).github, args.repo);
     try {
       prefix = prefixFor(await readCheckout(root));

@@ -5,7 +5,9 @@ import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { layout } from "../lib/paths.mjs";
+import { layout } from "../core/lib/paths.mjs";
+import { localDevHost, localDevUrl, portRef, serviceUrl } from "../core/lib/ports.mjs";
+export { localDevHost, localDevUrl, portRef, serviceUrl };
 
 const execFileAsync = promisify(execFile);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -58,35 +60,10 @@ export async function readCheckout(dir) {
   return { linked, branch: branch.stdout.trim(), directory: basename(path), path };
 }
 
-export function portRef(name) {
-  return `port {${name}}`;
-}
-
-export function serviceUrl(name) {
-  return `https://${name}.localhost`;
-}
-
 export function serviceHost(prefix, service) {
   return `${prefix}.${service}.localhost`;
 }
 
-export function localDevHost(hostname) {
-  const host = hostname.toLowerCase();
-  if (host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1") return true;
-  return host.endsWith(".localhost");
-}
-
-export function localDevUrl(value) {
-  let url;
-  try {
-    url = new URL(value);
-  } catch {
-    return null;
-  }
-  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-  if (!localDevHost(url.hostname)) return null;
-  return url.toString();
-}
 
 export function urlLines(prefix, services, bridge) {
   const lines = services.map((service) => `${portRef(service)} https://${serviceHost(prefix, service)}`);

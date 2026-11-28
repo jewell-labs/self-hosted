@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+node=/opt/homebrew/bin/node
+if [ ! -x "$node" ]; then
+  node=$(command -v node || true)
+fi
+if [ -z "$node" ]; then
+  echo "FAIL pre-commit githooks/pre-commit" >&2
+  echo "  message: node is not installed" >&2
+  echo "  fix: install Node.js so /opt/homebrew/bin/node exists, or put node on PATH" >&2
+  exit 1
+fi
+exec "$node" githooks/check.mjs

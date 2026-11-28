@@ -5,9 +5,9 @@ let
     name = "selfhost-mcp";
     runtimeInputs = [ txiki ];
     text = ''
-      export SELFHOST_RUN=${repo}/bin/run.js
+      export SELFHOST_RUN=${repo}/../core/bin/run.js
       export SELFHOST_SYNCIO=${syncio}/lib/syncio.${libExt}
-      exec ${txiki}/bin/tjs run "$SELFHOST_RUN" ${repo}/mcp/server.mjs "$@"
+      exec ${txiki}/bin/tjs run "$SELFHOST_RUN" ${repo}/../mcp/server.mjs "$@"
     '';
   };
 in

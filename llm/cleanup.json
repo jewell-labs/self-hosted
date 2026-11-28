@@ -1,0 +1,6 @@
+{
+  "schema": "jewell-labs.self-hosted.cleanup.v1",
+  "keep": [
+    "models"
+  ]
+}

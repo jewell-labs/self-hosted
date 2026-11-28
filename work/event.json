@@ -3,11 +3,15 @@
   "plugin": "work",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {
       "type": "workflow",
-      "name": "clean"
+      "name": "ci"
     },
     {
       "type": "harness"

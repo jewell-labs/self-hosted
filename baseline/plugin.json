@@ -1,0 +1,28 @@
+{
+  "id": "baseline",
+  "summary": "Record the host facts the other plugins just discovered.",
+  "proofRequired": true,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

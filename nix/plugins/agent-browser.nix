@@ -1,6 +1,6 @@
-{ lib, stdenv, fetchurl, autoPatchelfHook, plugin, pins }:
+{ lib, stdenv, fetchurl, autoPatchelfHook, plugin }:
 let
-  version = pins.agent-browser;
+  version = (builtins.fromJSON (builtins.readFile ../../agent-browser/plugin.json)).version;
   sources = {
     aarch64-darwin = {
       name = "cli-darwin-arm64";

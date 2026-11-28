@@ -1,6 +1,5 @@
-import { readDecisionModels } from "../decision/registry.mjs";
-import { repoRoot } from "../lib/discover.mjs";
-import { eventLog, historyFilter, readEvents, reportEvals } from "../lib/events.mjs";
+import { readDecisionModels } from "../core/lib/decision-catalog.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
 import { alignResults, runIsolated } from "./isolate.mjs";
 import { evalUnit, selectedIds } from "./unit.mjs";
 
@@ -96,7 +95,8 @@ export async function evalsRun(args, env = process.env, opts = {}) {
   };
 }
 
-export function evalsReport(env = process.env) {
+export async function evalsReport(env = process.env) {
+  const { eventLog, historyFilter, readEvents, reportEvals } = await import("../core/lib/events.mjs");
   const events = readEvents(eventLog(env), historyFilter({ plugin: "evals", type: "eval" }));
   return { text: JSON.stringify(reportEvals(events)), isError: false };
 }

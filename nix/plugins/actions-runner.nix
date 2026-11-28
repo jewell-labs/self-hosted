@@ -1,6 +1,6 @@
-{ stdenv, fetchurl, plugin, pins }:
+{ stdenv, fetchurl, plugin }:
 let
-  version = pins.actions-runner;
+  version = (builtins.fromJSON (builtins.readFile ../../actions-runner/plugin.json)).version;
   sources = {
     aarch64-darwin = {
       asset = "actions-runner-osx-arm64-${version}.tar.gz";

@@ -3,7 +3,7 @@ stdenv.mkDerivation {
   pname = "selfhost-syncio";
   version = "0.1.0";
   src = builtins.path {
-    path = ../runtime;
+    path = ../core/runtime;
     name = "selfhost-runtime";
     filter = path: type:
       let base = baseNameOf path; in

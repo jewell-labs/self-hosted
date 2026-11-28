@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { accessConfig, verifyAccessJwt } from "../lib/access.mjs";
-import { createBus, eventLog, EventError, formatSse, parseFilter } from "../lib/events.mjs";
-import { callTool, loadMesh, mcpTools, MeshError } from "../lib/mesh.mjs";
+import { accessConfig, verifyAccessJwt } from "../core/lib/access.mjs";
+import { createBus, eventLog, EventError, formatSse, parseFilter } from "../core/lib/events.mjs";
+import { callTool, loadMesh, mcpTools, MeshError } from "../core/lib/mesh.mjs";
 
-const logDir = join(dirname(fileURLToPath(import.meta.url)), "../plugins/cloudflare/log-ui");
+const logDir = join(dirname(fileURLToPath(import.meta.url)), "../cloudflare/log-ui");
 const logFiles = new Map([
   ["/log/", ["index.html", "text/html; charset=utf-8"]],
   ["/log/index.html", ["index.html", "text/html; charset=utf-8"]],

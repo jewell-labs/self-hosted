@@ -1,0 +1,39 @@
+{
+  "id": "core",
+  "summary": "Discovery, events, paths, and the minimum needed to add a plugin and set one up from an existing install.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "version": "26.11.0",
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    },
+    {
+      "path": "runtime/txiki",
+      "scope": "package",
+      "kind": "runtime"
+    },
+    {
+      "path": "runtime/syncio.dylib",
+      "scope": "package",
+      "kind": "runtime"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

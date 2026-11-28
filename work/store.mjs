@@ -1,20 +1,16 @@
 import { execFile } from "node:child_process";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join, sep } from "node:path";
 import { promisify } from "node:util";
-import { repoRoot } from "../lib/discover.mjs";
-import { realInside, writeInside } from "../lib/jail.mjs";
-import { homeDir, layout, pluginDir } from "../lib/paths.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
+import { realInside, writeInside } from "../core/lib/jail.mjs";
+import { homeDir, layout, pluginDir } from "../core/lib/paths.mjs";
 import { loadDescriptors } from "./harnesses.mjs";
 import { repoName, workPath } from "./names.mjs";
 
 const execFileAsync = promisify(execFile);
-export const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 export const PROJECTS_SCHEMA = "jewell-labs.self-hosted.projects.v1";
 const REF = /^[A-Za-z0-9._/-]+$/;
-const HARNESS_BIN = new Set(["grok", "claude", "codex", "pi"]);
-
 export function projectLines(text) {
   return text.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#") && !line.startsWith("interval_seconds="));
 }
@@ -129,10 +125,6 @@ export function workRoot(env = process.env) {
   return env.SELFHOST_WORK_ROOT ?? layout(env).work;
 }
 
-function inside(root, dir) {
-  return dir === root || dir.startsWith(root.endsWith(sep) ? root : `${root}${sep}`);
-}
-
 async function gitClone(spec) {
   await execFileAsync("git", ["clone", "--branch", spec.branch, "--single-branch", spec.remote, spec.dir], { timeout: 600_000 });
   const { stdout } = await execFileAsync("git", ["-C", spec.dir, "rev-parse", "HEAD"], { timeout: 30_000 });
@@ -197,6 +189,14 @@ export async function listWork(env = process.env) {
     }
   }
   return { projects: await readProjects(env), works };
+}
+
+
+export const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+const HARNESS_BIN = new Set(["grok", "claude", "codex", "pi"]);
+
+function inside(root, dir) {
+  return dir === root || dir.startsWith(root.endsWith(sep) ? root : `${root}${sep}`);
 }
 
 export async function liveHarnessCwds() {
@@ -269,8 +269,4 @@ export async function cleanWork(env = process.env, opts = {}) {
     removed.push(dir);
   }
   return { removed, kept };
-}
-
-export function defaultHome() {
-  return homedir();
 }

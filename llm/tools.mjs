@@ -1,5 +1,5 @@
-import { readHost } from "../lib/host.mjs";
-import { selectLlmProfile } from "../lib/profiles.mjs";
+import { readHost } from "../core/lib/host.mjs";
+import { selectLlmProfile } from "../core/lib/profiles.mjs";
 import {
   downloadWeight,
   listWeights,
@@ -8,7 +8,7 @@ import {
   readUsage,
   removeWeight,
   sampleFleet,
-} from "../lib/models.mjs";
+} from "../core/lib/models.mjs";
 
 function json(body, isError = false) {
   return { text: JSON.stringify(body), isError };

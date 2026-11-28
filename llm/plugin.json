@@ -1,0 +1,33 @@
+{
+  "id": "llm",
+  "summary": "One llama.cpp server for this host. One resident model. The GGUF library is ~/.self-hosted/llm/models/gguf. Decision reads that same directory.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    },
+    {
+      "path": "models",
+      "scope": "home",
+      "kind": "weights"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

@@ -3,6 +3,10 @@
   "plugin": "decision",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {

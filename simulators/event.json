@@ -3,6 +3,10 @@
   "plugin": "simulators",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {

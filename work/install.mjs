@@ -1,7 +1,7 @@
-import { mkdir, symlink, unlink, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { repoRoot } from "../lib/discover.mjs";
-import { layout, pluginDir } from "../lib/paths.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
+import { layout, pluginDir } from "../core/lib/paths.mjs";
 import { loadDescriptors } from "./harnesses.mjs";
 
 function sh(value) {
@@ -11,12 +11,12 @@ function sh(value) {
 export async function installWrappers(env = process.env) {
   const root = env.SELFHOST_ROOT ?? repoRoot();
   const bin = join(pluginDir("work", env), "bin");
-  const linkDir = layout(env).bin;
+  const commandDir = layout(env).bin;
   await mkdir(bin, { recursive: true });
-  await mkdir(linkDir, { recursive: true });
+  await mkdir(commandDir, { recursive: true });
   const docs = await loadDescriptors(root);
   const wrap = join(root, "work/wrap.mjs");
-  const launcher = join(root, "bin/selfhost");
+  const launcher = join(root, "core/bin/selfhost");
   const written = [];
   for (const doc of docs) {
     const script = `#!/bin/sh
@@ -27,9 +27,11 @@ exec ${sh(launcher)} ${sh(wrap)} ${sh(doc.id)} "$@"
 `;
     const dest = join(bin, doc.id);
     await writeFile(dest, script, { mode: 0o755 });
-    const link = join(linkDir, doc.id);
-    await unlink(link).catch(() => {});
-    await symlink(dest, link);
+    const command = join(commandDir, doc.id);
+    await unlink(command).catch((error) => {
+      if (error?.code !== "ENOENT") throw error;
+    });
+    await writeFile(command, script, { mode: 0o755 });
     written.push(dest);
   }
   return written;

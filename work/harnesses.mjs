@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { repoRoot } from "../lib/discover.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
 
 const ID_RE = /^[a-z0-9]+([.-][a-z0-9]+)*$/;
 const COMMAND_RE = /^[A-Za-z0-9][A-Za-z0-9.+_-]*$/;

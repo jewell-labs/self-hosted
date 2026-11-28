@@ -1,7 +1,7 @@
 import { realpath } from "node:fs/promises";
 import { sep } from "node:path";
-import { repoRoot } from "../lib/discover.mjs";
-import { BODY_MAX } from "../lib/events.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
+import { BODY_MAX } from "../core/lib/events.mjs";
 import { loadDescriptors, probeOne, runProcess } from "./harnesses.mjs";
 import { workRoot } from "./store.mjs";
 

@@ -1,10 +1,10 @@
 // One live benchmark. The routine calls the evals tool, and the tool writes the event log.
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { callTool } from "../lib/mesh.mjs";
-import { createBus, eventLog } from "../lib/events.mjs";
-import { layout } from "../lib/paths.mjs";
-import { due } from "../work/routines.mjs";
+import { callTool } from "../core/lib/mesh.mjs";
+import { createBus, eventLog } from "../core/lib/events.mjs";
+import { layout } from "../core/lib/paths.mjs";
+import { due } from "../core/lib/schedule.mjs";
 
 const EVERY = "1h";
 

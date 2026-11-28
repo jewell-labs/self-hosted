@@ -1,4 +1,4 @@
-import { readHost } from "../lib/host.mjs";
+import { readHost } from "../core/lib/host.mjs";
 import {
   addDecisionModel,
   downloadWeight,
@@ -8,7 +8,7 @@ import {
   recordUsage,
   removeDecisionModel,
   sampleFleet,
-} from "../lib/models.mjs";
+} from "../core/lib/models.mjs";
 import { DECISION_SCHEMA, decisionSlots, decisionUnit, expandSteps, loadDecisionCatalog, readDecisionModels } from "./registry.mjs";
 
 export function decisionModels(env = process.env) {
