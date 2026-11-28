@@ -12,7 +12,7 @@ Tool scripts run on txiki.js 26.11.0 through `bin/selfhost`. A warm-cache start 
 
 Call `discover` on that server.
 
-Access, when configured, is one team domain and one audience for MCP and the log. Tokens, keys, and weights stay outside git. `nuke` removes this account's state and keeps the paths in each plugin's `cleanup.json`. `nuke-all` removes those too.
+Access, when configured, is one team domain and one audience for MCP and the log. Tokens, keys, and weights stay outside git. `nuke` removes this account's state and keeps the paths in each plugin's `cleanup.json`. `nuke-all` removes those too. `disk` prints every directory at or above 1 GB and exits 0 when the owned store is under this home.
 
 `prove` needs a model id and a container. The container must not contain this machine's weights or tokens.
 

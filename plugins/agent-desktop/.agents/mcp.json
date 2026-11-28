@@ -31,7 +31,7 @@
     },
     {
       "name": "agent-desktop.uninstall",
-      "description": "Delete the agent-desktop folder under the self-hosted home. That folder holds the install, config, and state agent-desktop.setup wrote.",
+      "description": "The agent-desktop directory is a kept plugin asset. Uninstall leaves the sandbox store in place.",
       "destructive": true,
       "inputSchema": {
         "type": "object",

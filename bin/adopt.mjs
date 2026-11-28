@@ -35,6 +35,25 @@ for (const lock of [join(paths.legacy.ghref, ".lock"), join(paths.ghref, ".lock"
 
 mkdirSync(root, { recursive: true });
 
+const oldModels = join(root, "models");
+let oldModelsStat = null;
+try {
+  oldModelsStat = lstatSync(oldModels);
+} catch {
+  oldModelsStat = null;
+}
+if (oldModelsStat?.isDirectory() && !oldModelsStat.isSymbolicLink()) {
+  if (existsSync(paths.models)) die(`${paths.models} already exists; not merging`);
+  mkdirSync(dirname(paths.models), { recursive: true });
+  try {
+    await rename(oldModels, paths.models);
+  } catch (error) {
+    if (error?.code === "EXDEV") die(`${oldModels} is on another volume; not copying`);
+    throw error;
+  }
+  console.log(`moved ${oldModels}`);
+}
+
 const moves = [
   [paths.legacy.models, paths.models],
   [paths.legacy.agentDesktop, paths.agentDesktop],
@@ -57,13 +76,30 @@ function sameLink(src, dest) {
 
 const links = [];
 for (const [src, dest] of moves) {
-  if (!existsSync(src)) continue;
-  if (sameLink(src, dest)) {
-    links.push({ path: src, target: dest });
-    console.log(`already ${src}`);
+  let srcStat = null;
+  try {
+    srcStat = lstatSync(src);
+  } catch {
     continue;
   }
-  if (existsSync(src) && lstatSync(src).isSymbolicLink()) die(`${src} points somewhere else; not overwriting`);
+  if (srcStat.isSymbolicLink()) {
+    const target = resolve(dirname(src), readlinkSync(src));
+    const oldModelLink = src === paths.legacy.models && target === resolve(oldModels);
+    if (target === resolve(dest)) {
+      links.push({ path: src, target: dest });
+      console.log(`already ${src}`);
+      continue;
+    }
+    if (oldModelLink) {
+      await unlink(src);
+      await symlink(dest, src);
+      links.push({ path: src, target: dest });
+      console.log(`retargeted ${src}`);
+      continue;
+    }
+    die(`${src} points somewhere else; not overwriting`);
+  }
+  if (!existsSync(src)) continue;
   if (existsSync(dest)) die(`${dest} already exists; not merging`);
   if (src === paths.legacy.github) execFileSync("chmod", ["-R", "u+w", src], { stdio: "ignore" });
   mkdirSync(dirname(dest), { recursive: true });
