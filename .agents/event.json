@@ -3,6 +3,10 @@
   "plugin": "mesh",
   "events": [
     {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
       "type": "tool"
     },
     {

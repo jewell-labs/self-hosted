@@ -2,7 +2,7 @@
 import { execFile as execFileCb } from "node:child_process";
 import net from "node:net";
 import { promisify } from "node:util";
-import { containerEnv } from "../lib/paths.mjs";
+import { containerEnv } from "../core/lib/paths.mjs";
 
 const execFileAsync = promisify(execFileCb);
 
@@ -114,9 +114,13 @@ function missed(ids, body) {
   return { isolated: false, results: ids.map((id) => ({ id, detail: "error", body })) };
 }
 
+function launchEnv() {
+  return containerEnv({ ...process.env, CONTAINER_APP_ROOT: "" });
+}
+
 async function run(execImpl, bin, args, timeout) {
   try {
-    return await execImpl(bin, args, { timeout, encoding: "utf8", maxBuffer: 1024 * 1024, env: containerEnv() });
+    return await execImpl(bin, args, { timeout, encoding: "utf8", maxBuffer: 1024 * 1024, env: launchEnv() });
   } catch (error) {
     return { stdout: error?.stdout ?? "", stderr: error?.stderr ?? "", failed: true };
   }
@@ -187,7 +191,7 @@ export async function runIsolated(spec, opts = {}) {
       ...Object.entries(env).flatMap(([key, value]) => ["-e", `${key}=${value}`]),
       "--mount", `type=bind,source=${spec.root},target=/src,readonly`,
       IMAGE,
-      "bin/selfhost", "evals/cli.mjs",
+      "core/bin/selfhost", "evals/cli.mjs",
     ], 180_000);
     const parsed = parseEvalOutput(child.stdout);
     if (!parsed) return missed(ids, "container");

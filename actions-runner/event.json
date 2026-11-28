@@ -1,0 +1,17 @@
+{
+  "schema": "jewell-labs.self-hosted.event.v1",
+  "plugin": "actions-runner",
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    },
+    {
+      "type": "tool"
+    },
+    {
+      "type": "workflow",
+      "name": "ci"
+    }
+  ]
+}

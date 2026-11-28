@@ -1,0 +1,26 @@
+{
+  "id": "core",
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    },
+    {
+      "path": "runtime/txiki",
+      "scope": "package",
+      "kind": "runtime"
+    },
+    {
+      "path": "runtime/syncio.dylib",
+      "scope": "package",
+      "kind": "runtime"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

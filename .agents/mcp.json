@@ -46,7 +46,7 @@
     },
     {
       "name": "doctor",
-      "description": "Check the catalog, mesh, repos, Cloudflare files, and GitHub workflows. Omit level for strict.",
+      "description": "Check the catalog, mesh, repos, and Cloudflare files. This repo has no GitHub workflows. Mirrored repos still follow the runner rule. Omit level for strict.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -232,7 +232,7 @@
     },
     {
       "name": "events.workflow",
-      "description": "Record a ci or clean workflow event for one plugin. detail is started, ok, or error. The event stores no other text.",
+      "description": "Record a ci workflow event for one plugin. detail is started, ok, or error. The event stores no other text.",
       "destructive": false,
       "inputSchema": {
         "type": "object",
@@ -243,8 +243,7 @@
           "name": {
             "type": "string",
             "enum": [
-              "ci",
-              "clean"
+              "ci"
             ]
           },
           "detail": {

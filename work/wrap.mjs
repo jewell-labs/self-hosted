@@ -3,7 +3,7 @@ import { realpathSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { sep } from "node:path";
-import { repoRoot } from "../lib/discover.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
 import { loadDescriptors } from "./harnesses.mjs";
 import { chooseProject, createWork, ensureProject, listWork, workRoot } from "./store.mjs";
 

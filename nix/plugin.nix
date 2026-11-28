@@ -27,7 +27,7 @@ let
   preamble = ''
     repo=${repo}
     export SELFHOST_ROOT=$repo
-    export SELFHOST_RUN=$repo/bin/run.js
+    export SELFHOST_RUN=$repo/../core/bin/run.js
     export SELFHOST_SYNCIO=${syncio}/lib/syncio.${libExt}
     mkdir -p "$HOME/.self-hosted/${id}"
   '';
@@ -35,7 +35,7 @@ let
     name = "selfhost-${id}-setup";
     runtimeInputs = inputs;
     text = preamble + ''
-      ${txiki}/bin/tjs run "$SELFHOST_RUN" "$repo/bin/setup.mjs" ${id}
+      ${txiki}/bin/tjs run "$SELFHOST_RUN" "$repo/../core/bin/setup.mjs" ${id}
       ${setupBody}
     '';
   };
@@ -43,7 +43,7 @@ let
     name = "selfhost-${id}-check";
     runtimeInputs = inputs;
     text = preamble + (if checkBody == "" then ''
-      ${txiki}/bin/tjs run "$SELFHOST_RUN" "$repo/bin/check.mjs" ${id}
+      ${txiki}/bin/tjs run "$SELFHOST_RUN" "$repo/../core/bin/check.mjs" ${id}
     '' else checkBody);
   };
 in

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { writeInside } from "../lib/jail.mjs";
-import { homeDir } from "../lib/paths.mjs";
+import { writeInside } from "../core/lib/jail.mjs";
+import { homeDir } from "../core/lib/paths.mjs";
 import { detectSimulators } from "./detect.mjs";
 
 export async function writeSimulatorState(dir, env) {

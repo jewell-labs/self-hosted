@@ -1,7 +1,6 @@
-import { repoRoot } from "../lib/discover.mjs";
+import { repoRoot } from "../core/lib/discover.mjs";
 import { discoverHarnesses } from "./harnesses.mjs";
 import { cleanWork, createWork, listWork } from "./store.mjs";
-import { runHarness } from "./harness.mjs";
 
 function fail(error) {
   return { text: error instanceof Error ? error.message : String(error), isError: true };
@@ -47,6 +46,7 @@ export async function harnessList(env) {
 }
 
 export async function harnessRun(args, env, hooks = {}) {
+  const { runHarness } = await import("./harness.mjs");
   try {
     return await runHarness(args, env, {
       onEvent(event) {

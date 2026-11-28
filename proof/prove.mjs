@@ -7,8 +7,8 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { containerEnv } from "../lib/paths.mjs";
-import { serviceUrl } from "../portless/host.mjs";
+import { containerEnv } from "../core/lib/paths.mjs";
+import { serviceUrl } from "../core/lib/ports.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const llamaUrl = process.env.LLM_URL ?? process.env.LLAMA_URL ?? serviceUrl("llm");
@@ -53,7 +53,7 @@ function extractJson(text) {
 }
 
 async function askModel(discovery, correction) {
-  const prompt = await readFile(join(root, "prompts/setup-host.md"), "utf8");
+  const prompt = await readFile(join(root, "core/prompts/setup-host.md"), "utf8");
   const user = [
     "This is the container proof. The discover result was produced inside the container.",
     "Select plugins and copy validate commands exactly.",
@@ -101,7 +101,7 @@ if (created.code !== 0) {
 }
 
 try {
-  const raw = await exec(["bin/selfhost", "bin/discover.mjs"]);
+  const raw = await exec(["core/bin/selfhost", "core/bin/discover.mjs"]);
   const discovery = JSON.parse(raw);
   const expected = discovery.plugins.filter((plugin) => plugin.applicable && plugin.proofRequired);
   const expectedIds = expected.map((plugin) => plugin.id);
@@ -121,7 +121,7 @@ try {
   }
   console.log(JSON.stringify({ model, plugins: answer.plugins, validate: answer.validate }));
   for (const id of expectedIds) {
-    await exec(["bin/selfhost", "bin/setup.mjs", id]);
+    await exec(["core/bin/selfhost", "core/bin/setup.mjs", id]);
     console.log(`setup ${id}`);
   }
   console.log("proof ok");

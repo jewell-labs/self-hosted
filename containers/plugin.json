@@ -1,0 +1,21 @@
+{
+  "id": "containers",
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    },
+    {
+      "path": ".",
+      "scope": "home",
+      "kind": "store"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

@@ -1,17 +1,45 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { chat } from "./chat.mjs";
 import { gradeHierarchy, gradeProbe, hierarchySystem, hierarchyUser } from "./grade.mjs";
-import { loadHomePolicy } from "../lib/jail.mjs";
-import { loadDescriptors } from "../work/harnesses.mjs";
+import { loadHomePolicy } from "../core/lib/jail.mjs";
+
+async function readAgents(root) {
+  try {
+    return await readFile(join(root, "AGENTS.md"), "utf8");
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    return readFile(join(root, "Agents.md"), "utf8");
+  }
+}
+
+async function readHarnesses(root) {
+  const dir = join(root, "work/harnesses");
+  let files = [];
+  try {
+    files = (await readdir(dir)).filter((name) => name.endsWith(".json")).sort();
+  } catch (error) {
+    if (error?.code === "ENOENT") return [];
+    throw error;
+  }
+  const docs = [];
+  for (const file of files) {
+    const doc = JSON.parse(await readFile(join(dir, file), "utf8"));
+    if (!doc || typeof doc.id !== "string" || typeof doc.command !== "string") {
+      throw new Error(`${file} is not a descriptor`);
+    }
+    docs.push({ id: doc.id, command: doc.command });
+  }
+  return docs;
+}
 
 export async function evaluateAll(ids, ctx) {
   const root = ctx.root;
   const fetchImpl = ctx.fetchImpl ?? globalThis.fetch;
   const wantHierarchy = ids.includes("llm-hierarchy");
   const wantDecision = ids.includes("decision-core");
-  const agents = !wantHierarchy ? "" : (ctx.agents ?? await readFile(join(root, "Agents.md"), "utf8"));
-  const harnesses = !wantHierarchy ? [] : (ctx.harnesses ?? await loadDescriptors(root));
+  const agents = !wantHierarchy ? "" : (ctx.agents ?? await readAgents(root));
+  const harnesses = !wantHierarchy ? [] : (ctx.harnesses ?? await readHarnesses(root));
   const probes = !wantDecision ? [] : (ctx.probes ?? (await loadHomePolicy(root)).probes);
   const results = [];
   for (const id of ids) {

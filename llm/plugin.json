@@ -1,0 +1,21 @@
+{
+  "id": "llm",
+  "assets": [
+    {
+      "path": "assets",
+      "scope": "home",
+      "kind": "payload"
+    },
+    {
+      "path": "models",
+      "scope": "home",
+      "kind": "weights"
+    }
+  ],
+  "events": [
+    {
+      "type": "healthcheck",
+      "name": "healthcheck"
+    }
+  ]
+}

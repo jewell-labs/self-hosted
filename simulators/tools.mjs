@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { detectSimulators, knownSimulator } from "./detect.mjs";
-import { localDevUrl } from "../portless/host.mjs";
+import { localDevUrl } from "../core/lib/ports.mjs";
 
 const execFileAsync = promisify(execFile);
 

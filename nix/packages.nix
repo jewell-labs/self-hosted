@@ -6,8 +6,8 @@ let
   syncio = pkgs.callPackage ./syncio.nix { };
   plugin = pkgs.callPackage ./plugin.nix { repo = self; inherit txiki syncio; };
   libExt = if pkgs.stdenv.isDarwin then "dylib" else "so";
-  catalog = builtins.fromJSON (builtins.readFile ../catalog/plugins.json);
-  pins = builtins.fromJSON (builtins.readFile ../catalog/pins.json);
+  catalog = builtins.fromJSON (builtins.readFile ../core/catalog/plugins.json);
+  pins = builtins.fromJSON (builtins.readFile ../core/catalog/pins.json);
   names = [
     "baseline"
     "mcp"
@@ -66,9 +66,9 @@ let
           script = pkgs.writeShellScript "selfhost-wrap-${name}" ''
             here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
             PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$here" | paste -sd: -) || true
-            export SELFHOST_RUN=${self}/bin/run.js
+            export SELFHOST_RUN=${self}/../core/bin/run.js
             export SELFHOST_SYNCIO=${syncio}/lib/syncio.${libExt}
-            exec ${txiki}/bin/tjs run "$SELFHOST_RUN" ${self}/work/wrap.mjs ${name} "$@"
+            exec ${txiki}/bin/tjs run "$SELFHOST_RUN" ${self}/../work/wrap.mjs ${name} "$@"
           '';
         in ''
           cp ${script} $out/bin/${name}
@@ -77,7 +77,7 @@ let
     };
     evals = plugin {
       id = "evals";
-      summary = "Isolated container evals for the llm and the decision models. Every coding harness is graded against the same agents instructions.";
+      summary = "Record eval ids for the llm and the decision models. evals.report reads the event log.";
     };
     containers = plugin {
       id = "containers";
