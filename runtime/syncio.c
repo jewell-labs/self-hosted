@@ -479,7 +479,11 @@ int sh_spawn(const char *file, const char *argv_packed, const char *env_packed, 
   }
   attr_ready = 1;
   if (cwd && cwd[0]) {
+#if defined(__APPLE__)
     rc = posix_spawn_file_actions_addchdir(&actions, cwd);
+#else
+    rc = posix_spawn_file_actions_addchdir_np(&actions, cwd);
+#endif
     if (rc != 0) {
       rc = -rc;
       goto done;
@@ -533,7 +537,11 @@ int sh_spawn_detached(const char *file, const char *argv_packed, const char *env
     goto done;
   }
   if (cwd && cwd[0]) {
+#if defined(__APPLE__)
     rc = posix_spawn_file_actions_addchdir(&actions, cwd);
+#else
+    rc = posix_spawn_file_actions_addchdir_np(&actions, cwd);
+#endif
     if (rc != 0) {
       rc = -rc;
       goto done;
