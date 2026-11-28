@@ -1,11 +1,8 @@
-// Each plugin's cleanup.json names the paths nuke keeps.
+// Each plugin's cleanup.json names the paths that plugin's uninstall leaves.
 // A path is relative to that plugin's directory under the self-hosted home.
-import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, sep } from "node:path";
-
-export const CLEANUP_SCHEMA = "jewell-labs.self-hosted.cleanup.v1";
-
-const PLUGIN_ID = /^[a-z0-9]+([.-][a-z0-9]+)*$/;
+import { CLEANUP_SCHEMA, packageIds } from "./plugins.mjs";
 
 function fail(id) {
   throw new Error(`cleanup ${id}`);
@@ -32,34 +29,7 @@ function readOne(id, file) {
 }
 
 export function loadCleanup(repoRoot) {
-  let catalog;
-  try {
-    catalog = JSON.parse(readFileSync(join(repoRoot, "core/catalog/plugins.json"), "utf8"));
-  } catch {
-    throw new Error("cleanup catalog");
-  }
-  if (!Array.isArray(catalog.plugins)) throw new Error("cleanup catalog");
-  const byId = new Map();
-  for (const plugin of catalog.plugins) {
-    const id = plugin?.id;
-    if (typeof id !== "string" || !PLUGIN_ID.test(id)) throw new Error("cleanup catalog");
-    const top = join(repoRoot, id, "cleanup.json");
-    const nested = join(repoRoot, "plugins", id, "cleanup.json");
-    const topExists = existsSync(top);
-    const nestedExists = existsSync(nested);
-    if (topExists === nestedExists) fail(id);
-    byId.set(id, readOne(id, topExists ? top : nested));
-  }
-  const pluginsDir = join(repoRoot, "plugins");
-  if (existsSync(pluginsDir)) {
-    for (const name of readdirSync(pluginsDir)) {
-      if (byId.has(name) || !PLUGIN_ID.test(name)) continue;
-      const file = join(pluginsDir, name, "cleanup.json");
-      if (!existsSync(file)) continue;
-      byId.set(name, readOne(name, file));
-    }
-  }
-  return [...byId.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return packageIds(repoRoot).map((id) => readOne(id, join(repoRoot, id, "cleanup.json")));
 }
 
 export function keepRelPaths(repoRoot) {

@@ -6,31 +6,11 @@ let
   syncio = pkgs.callPackage ./syncio.nix { };
   plugin = pkgs.callPackage ./plugin.nix { repo = self; inherit txiki syncio; };
   libExt = if pkgs.stdenv.isDarwin then "dylib" else "so";
-  catalog = builtins.fromJSON (builtins.readFile ../core/catalog/plugins.json);
-  pins = builtins.fromJSON (builtins.readFile ../core/catalog/pins.json);
-  names = [
-    "baseline"
-    "mcp"
-    "llm"
-    "decision"
-    "cloudflare"
-    "sshd"
-    "github-repos"
-    "agent-desktop"
-    "agent-browser"
-    "actions-runner"
-    "simulators"
-    "portless"
-    "work"
-    "evals"
-    "containers"
-  ];
   harnessIds = map (name: lib.removeSuffix ".json" name) (
     lib.sort builtins.lessThan (
       builtins.attrNames (lib.filterAttrs (name: _: lib.hasSuffix ".json" name) (builtins.readDir ../work/harnesses))
     )
   );
-  catalogIds = map (pluginSpec: pluginSpec.id) catalog.plugins;
   packages = {
     baseline = plugin {
       id = "baseline";
@@ -46,9 +26,9 @@ let
     cloudflare = pkgs.callPackage ./plugins/cloudflare.nix { inherit plugin; };
     sshd = pkgs.callPackage ./plugins/sshd.nix { inherit plugin self; };
     github-repos = pkgs.callPackage ./plugins/github-repos.nix { inherit plugin self; };
-    agent-desktop = pkgs.callPackage ./plugins/agent-desktop.nix { inherit plugin pins; };
-    agent-browser = pkgs.callPackage ./plugins/agent-browser.nix { inherit plugin pins; };
-    actions-runner = pkgs.callPackage ./plugins/actions-runner.nix { inherit plugin pins; };
+    agent-desktop = pkgs.callPackage ./plugins/agent-desktop.nix { inherit plugin; };
+    agent-browser = pkgs.callPackage ./plugins/agent-browser.nix { inherit plugin; };
+    actions-runner = pkgs.callPackage ./plugins/actions-runner.nix { inherit plugin; };
     simulators = plugin {
       id = "simulators";
       summary = "Claim every available iOS simulator. A host with none records an empty list.";
@@ -85,7 +65,4 @@ let
     };
   };
 in
-assert catalogIds == names;
-assert pins.nix == "2.36.0";
-assert pins.txiki == "26.11.0";
 packages

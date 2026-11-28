@@ -147,22 +147,8 @@
       "run": { "type": "attach-macos" }
     },
     {
-      "name": "nuke",
-      "description": "Remove this account's self-hosted state. Keeps models, llm, decision, containers, and agent-desktop.",
-      "destructive": true,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "nuke" }
-    },
-    {
-      "name": "nuke-all",
-      "description": "Remove this account's self-hosted state, including models, llm, decision, containers, and agent-desktop.",
-      "destructive": true,
-      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "run": { "type": "nuke-all" }
-    },
-    {
       "name": "adopt",
-      "description": "Move an older layout into the self-hosted home and leave symlinks behind.",
+      "description": "Move an older layout into the self-hosted home. The old path is left absent.",
       "destructive": true,
       "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
       "run": { "type": "adopt" }

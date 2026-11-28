@@ -8,6 +8,7 @@ import { layout } from "./paths.mjs";
 import { decisionSlots, readDecisionModels } from "./decision-catalog.mjs";
 import { selectLlmProfile } from "./profiles.mjs";
 import { portRef } from "./ports.mjs";
+import { loadPlugin, packageIds } from "./plugins.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -74,9 +75,12 @@ export function buildDiscovery(env = process.env) {
   const host = { ...measured };
   delete host.freeGb;
   const paths = layout(env);
-  const catalog = JSON.parse(readFileSync(join(root, "core/catalog/plugins.json"), "utf8"));
   const prompt = loadPrompt();
-  const plugins = catalog.plugins.map((plugin) => pluginView(plugin, host, access, profile, env));
+  const plugins = packageIds(root).map((id) => pluginView({
+    ...loadPlugin(root, id),
+    setup: [`node ${id}/setup.mjs`],
+    validate: [],
+  }, host, access, profile, env));
   return {
     schema: "jewell-labs.self-hosted.discover.v1",
     repo: "https://github.com/jewell-labs/self-hosted",

@@ -3,7 +3,7 @@ name: mesh
 description: Call self-hosted mesh MCP tools instead of shell, and stay inside Cloudflare Access seat limits.
 ---
 
-Call `doctor` before changing `.agents`. Call `mesh.list` before adding a tool or a credential. Run plugin work as `<id>.setup`. `<id>.uninstall` deletes `~/.self-hosted/<id>`. `llm.remove` and `decision.remove` delete one weight from the shared library. `events.describe` validates the host from the event log. `discover` is the host and the catalog.
+Call `doctor` before changing `.agents`. Call `mesh.list` before adding a tool or a credential. Run plugin work as `<id>.setup`. `<id>.uninstall` deletes `~/.self-hosted/<id>`. `llm.remove` and `decision.remove` delete one weight from the shared library. `events.describe` validates the host from the event log. `discover` lists every package on this host.
 
 A destructive tool needs a verified Cloudflare Access JWT on every bind, including loopback. Read-only tools on loopback work when Access is not configured.
 

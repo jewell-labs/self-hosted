@@ -146,12 +146,25 @@ export function addPlugin(root, id) {
   mkdirSync(dir, { recursive: true });
   const doc = {
     id,
+    summary: `${id} package.`,
+    proofRequired: false,
+    match: { os: ["darwin", "linux"], arch: ["arm64", "x64"] },
     assets: [{ path: "assets", scope: "home", kind: "payload" }],
     events: [{ type: "healthcheck", name: "healthcheck" }],
   };
   writeFileSync(join(dir, "plugin.json"), `${JSON.stringify(doc, null, 2)}\n`);
   writeFileSync(join(dir, "setup.mjs"), fixtureSetup(id));
   writeFileSync(join(dir, "teardown.mjs"), fixtureTeardown(id));
+  writeFileSync(join(dir, "uninstall.mjs"), `import { uninstallSelf } from "../core/lib/uninstall.mjs";
+
+const result = uninstallSelf(import.meta.url);
+if (result.status !== 0) {
+  console.error(result.message);
+  process.exit(result.status);
+}
+console.log(result.message);
+`);
+  writeFileSync(join(dir, "cleanup.json"), `${JSON.stringify({ schema: "jewell-labs.self-hosted.cleanup.v1", keep: [] }, null, 2)}\n`);
   writeFileSync(join(dir, "README.md"), `# ${id}\n\nIsolated package added by core onto an existing install.\n`);
   writeFileSync(join(dir, "AGENTS.md"), `# ${id}\n\nWhen asked to set yourself up, reply with only {"command":"node ${id}/setup.mjs"}\n`);
   writeFileSync(join(dir, "event.json"), `${JSON.stringify({

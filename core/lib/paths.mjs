@@ -3,7 +3,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// cloudflared-studio and com.dpi.llama-* are earlier labels. nuke still removes them.
+// cloudflared-studio and com.dpi.llama-* are earlier labels. A plugin uninstall removes a LaunchAgent symlink whose target is inside that plugin.
 // A new tunnel agent uses com.jewell-labs.cloudflared.
 export const MANAGED_LABELS = Object.freeze([
   "com.jewell-labs.llama-server",
@@ -28,7 +28,7 @@ export function homeDir(env = process.env) {
 const PLUGIN_ID = /^[a-z0-9]+([.-][a-z0-9]+)*$/;
 
 // Everything a plugin sets up lives in this one directory.
-// cleanup.json names the paths inside it that nuke keeps.
+// cleanup.json names the paths inside it that uninstall leaves.
 export function pluginDir(id, env = process.env) {
   if (typeof id !== "string" || !PLUGIN_ID.test(id)) throw new Error(`plugin ${id ?? ""}`);
   return join(homeDir(env), id);

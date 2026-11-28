@@ -1,13 +1,13 @@
-import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { pluginVersion } from "../core/lib/plugins.mjs";
 import { layout } from "../core/lib/paths.mjs";
 
 export async function setup(ctx) {
-  const pins = JSON.parse(readFileSync(join(ctx.root, "core/catalog/pins.json"), "utf8"));
+  const version = pluginVersion(ctx.root, "agent-desktop");
   const dir = layout().agentDesktop;
   const unit = {
-    version: pins["agent-desktop"],
+    version,
     home: dir,
     env: "AGENT_DESKTOP_HOME",
     sandbox: {
@@ -24,10 +24,10 @@ export async function setup(ctx) {
 
 export async function check(ctx) {
   const written = JSON.parse(await readFile(join(ctx.stateDir, "agent-desktop.json"), "utf8"));
-  const pins = JSON.parse(readFileSync(join(ctx.root, "core/catalog/pins.json"), "utf8"));
+  const version = pluginVersion(ctx.root, "agent-desktop");
   const dir = layout().agentDesktop;
-  if (written.version !== pins["agent-desktop"] || written.home !== dir || written.env !== "AGENT_DESKTOP_HOME" || !written.sandbox.note.includes("Accessibility")) {
-    console.error("agent-desktop unit does not match core/catalog/pins.json");
+  if (written.version !== version || written.home !== dir || written.env !== "AGENT_DESKTOP_HOME" || !written.sandbox.note.includes("Accessibility")) {
+    console.error("agent-desktop unit does not match agent-desktop/plugin.json");
     process.exit(1);
   }
   console.log(`agent-desktop ok ${written.version}`);

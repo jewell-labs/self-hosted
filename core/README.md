@@ -1,8 +1,8 @@
 # self-hosted
 
-A host runs its own tools. This repo is the catalog, the mesh, and the setup prompt. It is not one machine.
+A host runs its own tools. This repo is the packages, the mesh, and the setup prompt. It is not one machine.
 
-`core/catalog/plugins.json` is the plugins. `core/prompts/setup-host.md` is the only setup prompt. `lib/paths.mjs` is where bytes live, under `~/.self-hosted`.
+Each package is a top-level directory with `plugin.json`. `core/prompts/setup-host.md` is the only setup prompt. `lib/paths.mjs` is where bytes live, under `~/.self-hosted`.
 
 Local dev starts the mesh with `core/bin/selfhost mcp/server.mjs` on port {mcp}. Portless assigns the socket. Host work is a tool on that server. `discover` prints this host. `explore` prints this checkout and every mirrored repo, without fetching. Plugin tools write `logs/events.jsonl`. `events.history` reads that log. `events.describe` is the validation. `evals.report` reads how models are doing.
 
@@ -14,7 +14,7 @@ Tool scripts run on txiki.js 26.11.0 through `core/bin/selfhost`. A warm-cache s
 
 Call `discover` on that server.
 
-Access, when configured, is one team domain and one audience for MCP and the log. Tokens, keys, and weights stay outside git. `nuke` removes this account's state and keeps the paths in each plugin's `cleanup.json`. `nuke-all` removes those too. `disk` prints every directory at or above 1 GB and exits 0 when the owned store is under this home.
+Access, when configured, is one team domain and one audience for MCP and the log. Tokens, keys, and weights stay outside git. Each package uninstalls itself with `uninstall.mjs` and leaves the paths in its `cleanup.json`. `disk` prints every directory at or above 1 GB and exits 0 when the owned store is under this home.
 
 `prove` needs a model id and a container. The container must not contain this machine's weights or tokens.
 

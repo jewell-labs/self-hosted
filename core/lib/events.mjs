@@ -5,6 +5,7 @@ import { readFile, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { sleepSync } from "../runtime/node/syncio.js";
 import { repoRoot } from "./discover.mjs";
+import { packageIds } from "./plugins.mjs";
 import { layout } from "./paths.mjs";
 
 export const EVENT_SCHEMA = "jewell-labs.self-hosted.event.v1";
@@ -90,17 +91,14 @@ export async function webhookPath(root, id) {
 
 export async function loadWebhooks(root = repoRoot()) {
   let definition;
-  let catalog;
   try {
     definition = JSON.parse(await readFile(join(root, "core", "events", "event.json"), "utf8"));
-    catalog = JSON.parse(await readFile(join(root, "core", "catalog", "plugins.json"), "utf8"));
   } catch {
     throw new EventError("event schema");
   }
   assertDefinition(definition);
-  if (!Array.isArray(catalog.plugins)) throw new EventError("event schema");
   const webhooks = [];
-  for (const id of [...catalog.plugins.map((plugin) => plugin.id), "mesh"]) {
+  for (const id of [...packageIds(root), "mesh"]) {
     let doc;
     try {
       doc = JSON.parse(await readFile(await webhookPath(root, id), "utf8"));

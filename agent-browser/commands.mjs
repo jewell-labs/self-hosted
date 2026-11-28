@@ -1,11 +1,11 @@
-import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { pluginVersion } from "../core/lib/plugins.mjs";
 
 export async function setup(ctx) {
-  const pins = JSON.parse(readFileSync(join(ctx.root, "core/catalog/pins.json"), "utf8"));
+  const version = pluginVersion(ctx.root, "agent-browser");
   const unit = {
-    version: pins["agent-browser"],
+    version,
     installBrowsers: "agent-browser install",
     note: "Chrome for Testing is downloaded into the user directory. It is not stored in git.",
   };
@@ -15,9 +15,9 @@ export async function setup(ctx) {
 
 export async function check(ctx) {
   const written = JSON.parse(await readFile(join(ctx.stateDir, "agent-browser.json"), "utf8"));
-  const pins = JSON.parse(readFileSync(join(ctx.root, "core/catalog/pins.json"), "utf8"));
-  if (written.version !== pins["agent-browser"] || written.installBrowsers !== "agent-browser install") {
-    console.error("agent-browser unit does not match core/catalog/pins.json");
+  const version = pluginVersion(ctx.root, "agent-browser");
+  if (written.version !== version || written.installBrowsers !== "agent-browser install") {
+    console.error("agent-browser unit does not match agent-browser/plugin.json");
     process.exit(1);
   }
   console.log(`agent-browser ok ${written.version}`);

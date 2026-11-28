@@ -1,5 +1,17 @@
 {
   "id": "github-repos",
+  "summary": "Sync the repos named in github-repos/config. The sync interval is interval_seconds in that file.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
   "assets": [
     {
       "path": "assets",

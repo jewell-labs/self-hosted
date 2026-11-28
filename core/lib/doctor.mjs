@@ -19,6 +19,8 @@ import { loadWebhooks } from "./events.mjs";
 
 import { loadCleanup } from "./cleanup.mjs";
 
+import { packageIds, pluginFindings } from "./plugins.mjs";
+
 import { loadHomePolicy, scanHome } from "./jail.mjs";
 
 import { layout } from "./paths.mjs";
@@ -82,16 +84,6 @@ function groupsFor(level) {
 }
 
 
-
-function namesFrom(source) {
-
-  const block = source.match(/names = \[([\s\S]*?)\];/);
-
-  if (!block) return [];
-
-  return [...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
-
-}
 
 
 
@@ -347,25 +339,11 @@ export async function doctor(env = process.env, args = {}) {
 
   if (groups.has("shape")) {
 
-    const catalogText = await readText(join(root, "core/catalog/plugins.json"));
+    const pluginIssues = pluginFindings(root);
 
-    const nixText = await readText(join(root, "nix/packages.nix"));
+    const pluginDetail = pluginIssues.length === 0 ? `${packageIds(root).length} packages` : pluginIssues.map((item) => `${item.file} ${item.message}`).join("; ");
 
-    if (!catalogText?.text || !nixText?.text) {
-
-      findings.push(finding("shape", "catalog.order", false, "catalog or nix names unreadable"));
-
-    } else {
-
-      const catalog = JSON.parse(catalogText.text);
-
-      const ids = catalog.plugins.map((plugin) => plugin.id);
-
-      const names = namesFrom(nixText.text);
-
-      findings.push(finding("shape", "catalog.order", ids.join() === names.join(), ids.join() === names.join() ? ids.join(",") : "catalog and nix names differ"));
-
-    }
+    findings.push(finding("shape", "plugins", pluginIssues.length === 0, pluginDetail.slice(0, 200)));
 
     try {
 
@@ -425,49 +403,45 @@ export async function doctor(env = process.env, args = {}) {
 
     }
 
-    const catalog = catalogText?.text ? JSON.parse(catalogText.text) : null;
+    const dupes = [];
 
-    if (catalog) {
+    for (const id of packageIds(root)) {
 
-      const dupes = [];
+      const mcp = await readText(join(root, id, ".agents", "mcp.json"));
 
-      for (const plugin of catalog.plugins) {
+      if (!mcp?.text) continue;
 
-        const copies = [
+      const copies = [
 
-          join(root, ".agents", "skills", plugin.id, "SKILL.md"),
+        join(root, ".agents", "skills", id, "SKILL.md"),
 
-          join(root, "plugins", plugin.id, ".agents", "SKILL.md"),
+        join(root, id, ".agents", "SKILL.md"),
 
-          join(root, plugin.id, ".agents", "SKILL.md"),
+      ];
 
-        ];
+      const found = [];
 
-        const found = [];
+      for (const file of copies) {
 
-        for (const file of copies) {
+        const read = await readText(file);
 
-          const read = await readText(file);
-
-          if (read?.text) found.push(file);
-
-        }
-
-        if (found.length > 1) dupes.push(plugin.id);
-
-        else if (found.length === 1) {
-
-          const read = await readText(found[0]);
-
-          if (skillName(read.text) !== plugin.id) dupes.push(plugin.id);
-
-        }
+        if (read?.text) found.push(file);
 
       }
 
-      findings.push(finding("shape", "skills.single", dupes.length === 0, dupes.length === 0 ? "one skill file per plugin" : dupes.join(",")));
+      if (found.length > 1) dupes.push(id);
+
+      else if (found.length === 1) {
+
+        const read = await readText(found[0]);
+
+        if (skillName(read.text) !== id) dupes.push(id);
+
+      }
 
     }
+
+    findings.push(finding("shape", "skills.single", dupes.length === 0, dupes.length === 0 ? "one skill file per plugin" : dupes.join(",")));
 
   }
 

@@ -1,5 +1,17 @@
 {
   "id": "proof",
+  "summary": "Guest proofs. prove runs from this package and does not mount host weights or tokens.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
   "assets": [
     {
       "path": "assets",

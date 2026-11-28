@@ -1,5 +1,19 @@
 {
   "id": "nix",
+  "summary": "Nix packages for the host plugins. The flake lives in this directory.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "version": "2.36.0",
+  "nixpkgs": "nixos-unstable",
   "assets": [
     {
       "path": "assets",

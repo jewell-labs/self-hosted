@@ -1,6 +1,6 @@
 # Nix
 
-`flake.nix` and `nix/plugins` are the packages. `core/catalog/plugins.json` is the ids and the setup commands. `core/catalog/pins.json` is the pinned CLI versions. `flake.lock` pins nixpkgs.
+`flake.nix` and `nix/plugins` are the packages. Each package's `plugin.json` holds its id, summary, and any CLI version. `nix/plugin.json` is the Nix version. `core/plugin.json` is the txiki version. `flake.lock` pins nixpkgs.
 
 `<id>.setup` runs that plugin's setup. `<id>.check` reads the unit that setup wrote. `flake` runs `nix flake check`. Setup does not set `SELFHOST_ACTIVATE` and does not start launchd or systemd.
 

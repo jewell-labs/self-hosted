@@ -1,5 +1,18 @@
 {
   "id": "portless",
+  "summary": "The core proxy. Host services are port {mcp}, port {llm}, port {decision}, and port {sshd}.",
+  "proofRequired": true,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "version": "0.18.1",
   "assets": [
     {
       "path": "assets",

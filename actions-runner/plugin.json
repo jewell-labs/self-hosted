@@ -1,5 +1,18 @@
 {
   "id": "actions-runner",
+  "summary": "GitHub Actions self-hosted runner. Refuses a public repository unless the operator overrides it.",
+  "proofRequired": false,
+  "match": {
+    "os": [
+      "darwin",
+      "linux"
+    ],
+    "arch": [
+      "arm64",
+      "x64"
+    ]
+  },
+  "version": "2.338.2",
   "assets": [
     {
       "path": "assets",

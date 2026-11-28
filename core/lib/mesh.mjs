@@ -6,6 +6,7 @@ import { publishEvent } from "./publish.mjs";
 import { layout } from "./paths.mjs";
 import { promisify } from "node:util";
 import { buildDiscovery, repoRoot } from "./discover.mjs";
+import { packageIds } from "./plugins.mjs";
 import { SECRET_RE } from "./secret.mjs";
 import { declareWorkflow, describeHistory, eventDefinition, eventLog, EventError, historyFilter, loadWebhooks, readEvents, reportEvals } from "./events.mjs";
 
@@ -65,7 +66,7 @@ export const MCP_SCHEMA = "jewell-labs.agents.mcp.v1";
 export const MESH_SCHEMA = "jewell-labs.agents.mesh.v1";
 export const LSP_SCHEMA = "jewell-labs.agents.lsp.v1";
 
-const INFRA_RUN_TYPES = new Set(["discover", "mesh-list", "mesh-lsp", "mesh-skill", "doctor", "events-webhooks", "events-history", "events-describe", "events-workflow", "repos", "explore", "sync", "prove", "attach-plan", "attach-run", "attach-macos", "nuke", "nuke-all", "adopt", "flake"]);
+const INFRA_RUN_TYPES = new Set(["discover", "mesh-list", "mesh-lsp", "mesh-skill", "doctor", "events-webhooks", "events-history", "events-describe", "events-workflow", "repos", "explore", "sync", "prove", "attach-plan", "attach-run", "attach-macos", "adopt", "flake"]);
 const PLUGIN_OWNER = {
   setup: "",
   check: "",
@@ -134,9 +135,7 @@ async function exists(path) {
 }
 
 async function pluginAgentDir(root, id) {
-  const top = join(root, id, ".agents");
-  if (await exists(join(top, "mcp.json"))) return top;
-  return join(root, "plugins", id, ".agents");
+  return join(root, id, ".agents");
 }
 
 function annotations(tool) {
@@ -333,8 +332,10 @@ async function absorbExternal(checkout, repoName, tools, skills, skipped) {
 
 export async function loadMesh(env = process.env) {
   const root = env.SELFHOST_ROOT ?? repoRoot();
-  const catalog = JSON.parse(await readOwn(join(root, "core/catalog/plugins.json")));
-  const ids = catalog.plugins.map((plugin) => plugin.id);
+  const ids = [];
+  for (const id of packageIds(root)) {
+    if (await exists(join(root, id, ".agents", "mcp.json"))) ids.push(id);
+  }
   const tools = [];
   const skills = [];
 
@@ -507,8 +508,6 @@ async function runHost(tool, args, env) {
     }
     return runFile(process.execPath, ["core/bin/attach.mjs", "run", "--name", name, "--filter", filter, "--", image, ...command], env, 600_000);
   }
-  if (tool.run.type === "nuke") return runFile(process.execPath, ["core/bin/nuke.mjs"], env, 120_000);
-  if (tool.run.type === "nuke-all") return runFile(process.execPath, ["core/bin/nuke.mjs", "--all"], env, 120_000);
   if (tool.run.type === "adopt") return runFile(process.execPath, ["core/bin/adopt.mjs"], env, 120_000);
   if (tool.run.type === "flake") return runFile("nix", ["flake", "check"], env, 600_000);
   throw new MeshError(`refusing run ${tool.run.type}`);
@@ -584,7 +583,7 @@ async function runTrusted(tool, args, env, mesh, opts) {
   }
   if (tool.run.type === "setup") return runNode("core/bin/setup.mjs", tool.run.plugin, env);
   if (tool.run.type === "check") return runNode("core/bin/check.mjs", tool.run.plugin, env);
-  if (tool.run.type === "remove") return runNode("core/bin/remove.mjs", tool.run.plugin, env);
+  if (tool.run.type === "remove") return runFile(process.execPath, [`${tool.run.plugin}/uninstall.mjs`], env, 60_000);
   const pluginResult = await runPluginTool(tool.run.type, args, env, opts);
   if (pluginResult) return pluginResult;
   if (INFRA_RUN_TYPES.has(tool.run.type)) return runHost(tool, args, env);

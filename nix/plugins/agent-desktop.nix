@@ -1,6 +1,6 @@
-{ lib, stdenv, fetchurl, autoPatchelfHook, plugin, pins }:
+{ lib, stdenv, fetchurl, autoPatchelfHook, plugin }:
 let
-  version = pins.agent-desktop;
+  version = (builtins.fromJSON (builtins.readFile ../../agent-desktop/plugin.json)).version;
   sources = {
     aarch64-darwin = {
       target = "aarch64-apple-darwin";

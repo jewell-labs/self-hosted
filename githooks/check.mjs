@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { extname } from "node:path";
 import { pathToFileURL } from "node:url";
+import { packageIds, pluginFindings } from "../core/lib/plugins.mjs";
 
 const TEXT_EXT = new Set([".mjs", ".js", ".json", ".md", ".nix", ".sh", ".yml", ".yaml"]);
 const DECL = /^export\s+(?:async\s+)?(?:function\*?|class|const|let|var)\s+([A-Za-z_$][\w$]*)/gm;
@@ -502,6 +503,12 @@ function run() {
   const dead = deadFindings(files);
   stages.push(stage("dead", elapsed(start), dead, count(dead.length, "unused export")));
   failures.push(...dead);
+
+  start = performance.now();
+  const plugins = pluginFindings(root);
+  const pluginDetail = plugins.length > 0 ? count(plugins.length, "problem") : count(packageIds(root).length, "package");
+  stages.push(stage("plugins", elapsed(start), plugins, pluginDetail));
+  failures.push(...plugins);
 
   start = performance.now();
   const brokenTests = new Set(syntax.findings.map((item) => item.file).filter((file) => file.endsWith(".test.mjs")));

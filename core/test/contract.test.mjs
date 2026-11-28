@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { dirname, join, normalize, relative } from "node:path";
 import { listPackages, loadPackage, repoRootFromHere } from "../lib/lifecycle.mjs";
+import { REQUIRED_FILES } from "../lib/plugins.mjs";
 
 const root = repoRootFromHere();
 const specRe = /(?:\bfrom|\bimport)\s*(?:\(\s*)?["'](\.[^"']+)["']/g;
@@ -35,7 +36,7 @@ test("shipped packages satisfy the isolation contract", () => {
   const rootFiles = readdirSync(root).filter((name) => statSync(join(root, name)).isFile()).sort();
   assert.deepEqual(rootFiles, ["AGENTS.md", "README.md"]);
   for (const id of ids) {
-    for (const file of ["README.md", "AGENTS.md", "plugin.json", "setup.mjs", "teardown.mjs", "event.json"]) {
+    for (const file of REQUIRED_FILES) {
       assert.equal(existsSync(join(root, id, file)), true, `${id} missing ${file}`);
     }
     const doc = loadPackage(root, id);
