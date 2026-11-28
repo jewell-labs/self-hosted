@@ -36,8 +36,6 @@ test("keep paths are the owned store and a stray directory fails", async () => {
     assert.equal(classify(join(fix.home, "Library/Application Support/com.apple.wallpaper"), fix.ctx), "pinned");
     assert.equal(classify(join(fix.home, "Library/Application Support/Google"), fix.ctx), "tool");
     assert.equal(classify(join(fix.home, "Library/Caches/lima"), fix.ctx), "orphan");
-    assert.equal(classify(join(fix.ctx.shared, "studio-models"), fix.ctx), "orphan");
-    assert.equal(classify(join(fix.home, "self-hosted-work-preserve"), fix.ctx), "copy");
     assert.equal(classify(join(fix.home, ".codex"), fix.ctx), "tool");
     assert.equal(classify(join(fix.home, "mystery"), fix.ctx), "");
 

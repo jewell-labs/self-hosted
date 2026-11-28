@@ -1,13 +1,9 @@
-// Rendered argv for llama.cpp 1.0. Placeholders are filled from the host.
-// Mac Studio M1 Max, 32GB unified memory, single-stream throughput:
-// eight performance cores, every layer on Metal, Flash Attention, q8_0 KV,
-// context 8192, one slot. A larger context or a second slot spends bandwidth
-// on KV instead of weights. mlock is omitted; unified memory does not benefit,
-// and locking the working set fights jetsam.
+// Rendered argv for llama.cpp. Placeholders are filled from the host.
+// Apple silicon keeps every layer on the GPU. Thread count comes from the host.
 
 export const LLAMA_PROFILES = {
-  "mac-studio-m1-max-32gb": {
-    match: { os: ["darwin"], arch: ["arm64"], minMemGb: 24, maxMemGb: 40 },
+  "darwin-arm64": {
+    match: { os: ["darwin"], arch: ["arm64"] },
     port: "llm",
     args: [
       "--host", "127.0.0.1",
@@ -15,9 +11,8 @@ export const LLAMA_PROFILES = {
       "--jinja",
       "--flash-attn", "on",
       "--n-gpu-layers", "999",
-      "--threads", "8",
-      "--threads-batch", "8",
-      "--cpu-range", "0-7",
+      "--threads", "{{threads}}",
+      "--threads-batch", "{{threads}}",
       "--batch-size", "2048",
       "--ubatch-size", "512",
       "--cache-type-k", "q8_0",
@@ -26,9 +21,6 @@ export const LLAMA_PROFILES = {
       "--parallel", "1",
       "--cont-batching",
       "--models-max", "1",
-      "--models-memory-margin", "4096",
-      "--cache-ram", "4096",
-      "--sleep-idle-seconds", "600",
       "--no-webui",
       "--metrics",
     ],
@@ -92,8 +84,8 @@ function profileMatches(profile, host) {
 
 export function selectLlmProfile(host) {
   const order = host.nvidia
-    ? ["linux-cuda", "mac-studio-m1-max-32gb", "linux-cpu"]
-    : ["mac-studio-m1-max-32gb", "linux-cpu", "linux-cuda"];
+    ? ["linux-cuda", "darwin-arm64", "linux-cpu"]
+    : ["darwin-arm64", "linux-cpu", "linux-cuda"];
   for (const id of order) {
     const profile = LLAMA_PROFILES[id];
     if (profileMatches(profile, host)) return { id, ...profile, args: renderArgs(profile.args, host) };

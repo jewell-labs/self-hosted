@@ -33,7 +33,7 @@ function allowed(packageId, target) {
 test("shipped packages satisfy the isolation contract", () => {
   const ids = listPackages(root);
   assert.deepEqual(ids, directPackages());
-  const rootFiles = readdirSync(root).filter((name) => statSync(join(root, name)).isFile()).sort();
+  const rootFiles = readdirSync(root).filter((name) => name !== ".git" && statSync(join(root, name)).isFile()).sort();
   assert.deepEqual(rootFiles, ["AGENTS.md", "README.md"]);
   for (const id of ids) {
     for (const file of REQUIRED_FILES) {

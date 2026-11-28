@@ -22,11 +22,11 @@ test("due accepts the routine intervals", () => {
 test("hostJobs keeps the routines job on the core launcher", () => {
   const jobs = hostJobs({
     SELFHOST_ROOT: "/repo",
-    HOME: "/Users/studio",
-    SELFHOST_HOME: "/Users/studio/.self-hosted",
+    HOME: "/Users/example",
+    SELFHOST_HOME: "/Users/example/.self-hosted",
   });
   assert.deepEqual(jobs.map((job) => job.label), [
-    "com.jewell-labs.cloudflared-studio",
+    "com.jewell-labs.cloudflared",
     "com.jewell-labs.userland-sshd",
     "com.jewell-labs.routines",
     "com.jewell-labs.llama-server",

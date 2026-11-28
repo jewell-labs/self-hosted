@@ -138,7 +138,7 @@ const found = existsSync(agents)
   ? readdirSync(agents)
     .filter((name) => name.endsWith(".plist") && !name.endsWith(".plist.replaced"))
     .map((name) => name.slice(0, -".plist".length))
-    .filter((name) => MANAGED_LABELS.includes(name) || name.startsWith("com.jewell-labs.") || name.startsWith("com.dpi.llama"))
+    .filter((name) => MANAGED_LABELS.includes(name) || name.startsWith("com.jewell-labs."))
   : [];
 const labels = [...new Set([...MANAGED_LABELS, ...found])];
 recordLaunchAgents(process.env, labels);

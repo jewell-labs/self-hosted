@@ -8,7 +8,7 @@ Local dev starts the mesh with `core/bin/selfhost mcp/server.mjs` on port {mcp}.
 
 `grok`, `claude`, `codex`, and `pi` are wrappers. Each one asks for a project, then clones it under `~/.self-hosted/work`. A new harness is `work/harnesses/<id>.json`. Its probe is the test. `GET /events?type=harness` streams that CLI's own event lines.
 
-Tool scripts run on txiki.js 26.11.0 through `core/bin/selfhost`. A warm-cache start on Apple silicon was about 8.5 ms, and the macOS arm64 binary is about 6 MB. Linux has no upstream zip; the Nix package builds tag v26.11.0. A proof or eval container needs `SELFHOST_TJS`.
+Tool scripts run on txiki.js 26.11.0 through `core/bin/selfhost`. Linux has no upstream zip; the Nix package builds tag v26.11.0. A proof or eval container needs `SELFHOST_TJS`.
 
 `githooks/pre-commit` is the check. It prints a profile with the milliseconds, status, and share of time for each stage. A failure prints `FAIL`, the check name, the file and line, the error, and the fix. The stages refuse `actions-runner` on this public repo, run `node --test`, and report a syntax error, trailing whitespace, a missing final newline, or an unused export.
 

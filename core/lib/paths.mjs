@@ -3,17 +3,13 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// cloudflared-studio and com.dpi.llama-* are earlier labels. A plugin uninstall removes a LaunchAgent symlink whose target is inside that plugin.
-// A new tunnel agent uses com.jewell-labs.cloudflared.
+// A plugin uninstall removes a LaunchAgent symlink whose target is inside that plugin.
 export const MANAGED_LABELS = Object.freeze([
   "com.jewell-labs.llama-server",
   "com.jewell-labs.cloudflared",
-  "com.jewell-labs.cloudflared-studio",
   "com.jewell-labs.userland-sshd",
   "com.jewell-labs.routines",
   "local.ghref",
-  "com.dpi.llama-server",
-  "com.dpi.llama-router",
   "com.jewell-labs.harness-check",
 ]);
 

@@ -17,7 +17,7 @@ import {
 const secret = "super-secret-token-value";
 
 test("tunnel plist points at the script and does not carry the token", () => {
-  const job = tunnelJob({ SELFHOST_ROOT: "/repo", HOME: "/Users/studio", SELFHOST_HOME: "/Users/studio/.self-hosted" });
+  const job = tunnelJob({ SELFHOST_ROOT: "/repo", HOME: "/Users/example", SELFHOST_HOME: "/Users/example/.self-hosted" });
   const plist = renderPlist(job);
   const unit = renderSystemd(job);
   assert.equal(job.program[0], "/bin/sh");

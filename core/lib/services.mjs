@@ -99,7 +99,7 @@ export function assertNoSecret(text, secret) {
   }
 }
 
-// The studio tunnel publishes llama on 127.0.0.1:8080. The port stays fixed.
+// Llama listens on 127.0.0.1. The port stays 8080 unless SELFHOST_LLM_PORT is set.
 export function llamaJob(env = process.env) {
   const host = readHost(env);
   const profile = selectLlmProfile(host);
@@ -123,7 +123,7 @@ export function llamaJob(env = process.env) {
 export function tunnelJob(env = process.env) {
   const log = join(layout(env).cloudflared, "cloudflared.log");
   return {
-    label: "com.jewell-labs.cloudflared-studio",
+    label: "com.jewell-labs.cloudflared",
     where: "host",
     restart: "on-failure",
     runAtLoad: true,

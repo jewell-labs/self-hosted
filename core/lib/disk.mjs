@@ -30,9 +30,7 @@ export function diskContext(env, keep) {
     orphan: [
       join(home, "Library", "Caches", "lima"),
       join(home, ".tart"),
-      join(shared, "studio-models"),
     ],
-    copy: [join(home, "self-hosted-work-preserve")],
     tool: [
       join(home, ".codex"),
       join(home, ".grok"),
@@ -49,10 +47,7 @@ export function diskContext(env, keep) {
       join(home, "Library", "Caches", "Google"),
       join(home, "Library", "Application Support", "Google"),
     ],
-    ownedOutside: [
-      join(shared, "studio-models", "mlx"),
-      join(shared, "studio-models", "imports"),
-    ],
+    ownedOutside: [],
   };
 }
 
@@ -65,7 +60,6 @@ export function classify(path, ctx) {
   }
   for (const prefix of ctx.pinned) if (inside(prefix, abs)) return "pinned";
   for (const prefix of ctx.orphan) if (inside(prefix, abs)) return "orphan";
-  for (const prefix of ctx.copy) if (inside(prefix, abs)) return "copy";
   for (const prefix of ctx.tool) if (inside(prefix, abs)) return "tool";
   return "";
 }
@@ -104,7 +98,7 @@ function childDirs(path) {
 }
 
 function holdsClass(path, ctx) {
-  const prefixes = [...ctx.pinned, ...ctx.orphan, ...ctx.copy, ...ctx.tool];
+  const prefixes = [...ctx.pinned, ...ctx.orphan, ...ctx.tool];
   return prefixes.some((prefix) => resolve(prefix) !== resolve(path) && inside(path, prefix));
 }
 

@@ -88,6 +88,7 @@ export function pluginFindings(root) {
     } catch {
       continue;
     }
+    if (name === ".git") continue;
     if (stat.isSymbolicLink()) {
       findings.push(finding(name, "root entry is a symlink", `remove the symlink ${name}`));
       continue;
