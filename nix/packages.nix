@@ -23,6 +23,7 @@ let
     "portless"
     "work"
     "evals"
+    "containers"
   ];
   harnessIds = map (name: lib.removeSuffix ".json" name) (
     lib.sort builtins.lessThan (
@@ -77,6 +78,10 @@ let
     evals = plugin {
       id = "evals";
       summary = "Isolated container evals for the llm and the decision models. Every coding harness is graded against the same agents instructions.";
+    };
+    containers = plugin {
+      id = "containers";
+      summary = "Apple container images, kernels, and volumes. The store is ~/.self-hosted/containers.";
     };
   };
 in

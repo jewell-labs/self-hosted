@@ -2,7 +2,7 @@
 // Same-volume rename only. Does not bootout launchd and does not print file contents.
 import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, writeFileSync } from "node:fs";
-import { rename, symlink } from "node:fs/promises";
+import { rename, symlink, unlink } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { installLaunchAgents, recordLaunchAgents } from "../lib/launchd.mjs";
 import { MANAGED_LABELS, layout, userHome } from "../lib/paths.mjs";
@@ -44,7 +44,6 @@ const moves = [
   [paths.legacy.ghref, paths.ghref],
   [paths.legacy.portless, paths.portless],
   [paths.legacy.state, paths.state],
-  [paths.legacy.containers, paths.containers],
 ];
 
 function sameLink(src, dest) {
@@ -78,6 +77,29 @@ for (const [src, dest] of moves) {
   if (src === paths.legacy.github) execFileSync("chmod", ["-R", "a-w", dest], { stdio: "ignore" });
   links.push({ path: src, target: dest });
   console.log(`moved ${src}`);
+}
+
+// The containers plugin owns its directory. Do not leave the Apple default path behind.
+const containerSrc = paths.legacy.containers;
+const containerDest = paths.containers;
+if (existsSync(containerSrc)) {
+  if (sameLink(containerSrc, containerDest)) {
+    await unlink(containerSrc);
+    console.log(`unlinked ${containerSrc}`);
+  } else if (lstatSync(containerSrc).isSymbolicLink()) {
+    die(`${containerSrc} points somewhere else; not overwriting`);
+  } else if (existsSync(containerDest)) {
+    die(`${containerDest} already exists; not merging`);
+  } else {
+    mkdirSync(dirname(containerDest), { recursive: true });
+    try {
+      await rename(containerSrc, containerDest);
+    } catch (error) {
+      if (error?.code === "EXDEV") die(`${containerSrc} is on another volume; not copying`);
+      throw error;
+    }
+    console.log(`moved ${containerSrc}`);
+  }
 }
 
 for (const dir of [paths.logs, paths.bin, paths.launchd, paths.state, paths.gguf, paths.containers]) {

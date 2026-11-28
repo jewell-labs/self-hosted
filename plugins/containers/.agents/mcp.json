@@ -1,0 +1,47 @@
+{
+  "schema": "jewell-labs.agents.mcp.v1",
+  "tools": [
+    {
+      "name": "containers.setup",
+      "description": "Create the Apple container store at ~/.self-hosted/containers. Does not start container services.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "setup",
+        "plugin": "containers"
+      }
+    },
+    {
+      "name": "containers.check",
+      "description": "Check that the Apple container store is the containers plugin directory.",
+      "destructive": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "check",
+        "plugin": "containers"
+      }
+    },
+    {
+      "name": "containers.uninstall",
+      "description": "The containers directory is a kept plugin asset. Uninstall leaves the image store in place.",
+      "destructive": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "run": {
+        "type": "remove",
+        "plugin": "containers"
+      }
+    }
+  ]
+}

@@ -16,4 +16,4 @@ Access, when configured, is one team domain and one audience for MCP and the log
 
 `prove` needs a model id and a container. The container must not contain this machine's weights or tokens.
 
-`attach-plan` prints one mount of this home, including `llm/models/gguf`, for an Apple container and for a macOS sandbox share. A filter JSON keeps the listed model files and skills and leaves the rest out. The guest sees the library files. It does not get a second copy. `attach-run` starts the container. `attach-macos` fills that sandbox's share and does not start the VM.
+`attach-plan` prints one mount of this home, including `llm/models/gguf`, for an Apple container and for a macOS sandbox share. A filter JSON keeps the listed model files and skills and leaves the rest out. The guest sees the library files. It does not get a second copy. `attach-run` starts the container. `attach-macos` fills that sandbox's share and does not start the VM. The Apple container store is `~/.self-hosted/containers`. Those commands set `CONTAINER_APP_ROOT` to that directory.
